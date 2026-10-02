@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher access | Learning Center</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="auth.js" defer></script>
+</head>
+<body>
+    <main class="page-shell auth-shell">
+        <header class="brand"><a class="brand-mark" href="index.html" aria-label="Learning Center home">LC</a><span>Learning Center</span></header>
+        <a class="back-link" href="index.html">&#8592; All account types</a>
+        <section class="auth-layout" aria-labelledby="auth-title">
+            <div class="auth-intro">
+                <p class="eyebrow">TEACHER PORTAL</p>
+                <h1 id="auth-title">Good teaching<br>starts here.</h1>
+                <p>Register with your school details, verify your email, then sign in.</p>
+            </div>
+            <div class="auth-panel">
+                <div class="tab-list" role="tablist" aria-label="Teacher account actions">
+                    <button class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="register-panel" data-panel="register-panel">Register</button>
+                    <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="verify-panel" data-panel="verify-panel">Verify email</button>
+                    <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="login-panel" data-panel="login-panel">Sign in</button>
+                </div>
+                <p class="form-message" id="form-message" role="status" aria-live="polite" hidden></p>
+                <section id="register-panel" class="form-panel" role="tabpanel">
+                    <h2>Create teacher account</h2>
+                    <form id="register-form">
+                        <label for="register-name">Full name</label>
+                        <input id="register-name" name="fullName" autocomplete="name" required>
+                        <label for="register-email">Email</label>
+                        <input id="register-email" name="email" type="email" autocomplete="email" required>
+                        <label for="register-phone">Phone number</label>
+                        <input id="register-phone" name="phone" type="tel" autocomplete="tel" required>
+                        <label for="register-password">Password</label>
+                        <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+                        <label for="register-confirm">Confirm password</label>
+                        <input id="register-confirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+                        <button class="submit-button" type="submit">Create account <span aria-hidden="true">&#8594;</span></button>
+                    </form>
+                </section>
+                <section id="verify-panel" class="form-panel" role="tabpanel" hidden>
+                    <h2>Verify your email</h2>
+                    <p class="panel-copy">Enter the six-digit code sent to your email after registration.</p>
+                    <form id="verify-form">
+                        <label for="verify-identifier">Email, phone, or username</label>
+                        <input id="verify-identifier" name="identifier" autocomplete="username" required>
+                        <label for="verify-otp">Verification code</label>
+                        <input id="verify-otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+                        <button class="submit-button" type="submit">Verify account <span aria-hidden="true">&#8594;</span></button>
+                    </form>
+                </section>
+                <section id="login-panel" class="form-panel" role="tabpanel" hidden>
+                    <h2>Welcome back</h2>
+                    <form id="login-form">
+                        <label for="login-identifier">Email, phone, or username</label>
+                        <input id="login-identifier" name="identifier" autocomplete="username" required>
+                        <label for="login-password">Password</label>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+                        <button class="submit-button" type="submit">Sign in <span aria-hidden="true">&#8594;</span></button>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
