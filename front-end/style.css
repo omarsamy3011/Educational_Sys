@@ -27,7 +27,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
     font: inherit;
 }
 
@@ -237,7 +238,18 @@ a.role-link:hover span:last-child {
     color: var(--ink);
 }
 
+.form-panel select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: #fcfdfb;
+    color: var(--ink);
+}
+
 .form-panel input:focus-visible,
+.form-panel select:focus-visible,
 .tab-button:focus-visible,
 .submit-button:focus-visible,
 .back-link:focus-visible,

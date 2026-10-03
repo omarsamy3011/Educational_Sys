@@ -114,7 +114,7 @@ class AuthService {
             <!-- Footer -->
             <tr>
                 <td align="center" style="padding-top: 20px; color: #aaaaaa; font-size: 12px;">
-                &copy; 2026 Your App Name. All rights reserved.
+                &copy; 2026 EduVerse Academy. All rights reserved.
                 </td>
             </tr>
 
@@ -131,14 +131,45 @@ class AuthService {
         redisService.set({key:`otp::${data.email}`,value:`${await genertateHash({plainText:otp})}`,ttl:60*5})
         return await this.teacherRepository.create(data)
     }
-
+    async studentSignup(data:IStudent,file:Express.Multer.File){
+        let existingSTD = await this.studentRepository.findone({filter:{
+        $or: [
+        { phone:data.phone },
+        { userID:data.userID },
+        ]
+    }})
+        if(existingSTD){
+            if (existingSTD.phone === data.phone) throw new BadRequestError('Phone number already registered');
+            if (existingSTD.userID === data.userID) throw new BadRequestError('Username already taken');
+        }
+        let hashedpass = await genertateHash({plainText:data.password})
+        data.password = hashedpass
+        let picture
+        return await this.studentRepository.create(data)
+    }
+    async centerSignup(data:ICenter,file:Express.Multer.File){
+        let existingCenter = await this.centerRepository.findone({filter:{
+        $or: [
+        { phone:data.phone },
+        { name:data.name },
+        ]
+    }})
+        if(existingCenter){
+            if (existingCenter.phone === data.phone) throw new BadRequestError('Phone number already registered');
+            if (existingCenter.name === data.name) throw new BadRequestError('Username already taken');
+        }
+        let hashedpass = await genertateHash({plainText:data.password})
+        data.password = hashedpass
+        let picture
+        return await this.centerRepository.create(data)
+    }
     async teacherLogin(data:any){
         let { identifier , password } = data
         let teacherData = await this.teacherRepository.findone({filter:{
         $or: [{ email: identifier }, { phone: identifier }, { userName: identifier }],
     }})
-    if(teacherData.confirmEmail){
         if(teacherData){
+            if(!teacherData.confirmEmail) throw new BadRequestError('Email Is Not Verified')
             let isMatched = await compareHash({plainText:password,cypherText:teacherData.password})
             if(isMatched){
                 return this.tokenService.generateToken(teacherData)
@@ -148,9 +179,39 @@ class AuthService {
         }else{
             throw new NotFoundError('Teacher Account Not Found')
         }
-    }else{
-        throw new BadRequestError('Account Is Not Verified')
     }
+    async studentLogin(data:any){
+        let { identifier , password } = data
+        let studentData = await this.studentRepository.findone({filter:{
+        $or: [ { phone: identifier }, { userID: identifier }]
+    }})
+        if(studentData){
+            if(!studentData.confirmAccount) throw new BadRequestError('Email Is Not Verified')
+            let isMatched = await compareHash({plainText:password,cypherText:studentData.password})
+            if(isMatched){
+                return this.tokenService.generateToken(studentData)
+            }else{
+                throw new BadRequestError('password invalid')
+            }
+        }else{
+            throw new NotFoundError('Student Account Not Found')
+        }
+    }
+    async centerLogin(data:any){
+        let { identifier , password } = data
+        let centerData = await this.centerRepository.findone({filter:{
+        $or: [ { phone: identifier }, { name: identifier }]
+    }})
+        if(centerData){
+            let isMatched = await compareHash({plainText:password,cypherText:centerData.password})
+            if(isMatched){
+                return this.tokenService.generateToken(centerData)
+            }else{
+                throw new BadRequestError('password invalid')
+            }
+        }else{
+            throw new NotFoundError('Center Account Not Found')
+        }
     }
 
     // async gets3url(name:string){

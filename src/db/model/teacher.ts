@@ -70,13 +70,13 @@ const teacherSchema = new mongoose.Schema<ITeacher>({
     toObject: { virtuals: true },
     })
 
-teacherSchema.virtual('userName').set(function(this,userName){
-    let [firstName,lastName] = userName.split(' ')
-    this.firstName = firstName
-    this.lastName = lastName
-}).get(function(this){
-    return `${this.firstName || ''} ${this.lastName || ''}`.trim();
-})
+// teacherSchema.virtual('userName').set(function(this,userName){
+//     let [firstName,lastName] = userName.split(' ')
+//     this.firstName = firstName
+//     this.lastName = lastName
+// }).get(function(this){
+//     return `${this.firstName || ''} ${this.lastName || ''}`.trim();
+// })
 
 const teacherModel = mongoose.model<ITeacher>('Teacher',teacherSchema)
 

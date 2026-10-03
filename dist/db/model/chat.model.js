@@ -33,74 +33,98 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.chatModel = exports.chatSchema = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const user_enum_1 = require("../../common/enum/user.enum");
-const subject_enum_1 = require("../../common/enum/subject.enum");
-const teacherSchema = new mongoose_1.default.Schema({
-    firstName: String,
-    lastName: String,
-    userName: {
+const chat_enum_1 = require("../../common/enum/chat.enum");
+const messageSchema = new mongoose_1.default.Schema({
+    content: {
         type: String,
-        required: true,
-        unique: true
+        required: function () {
+            return this.attachments.length == 0;
+        }
     },
-    email: {
-        type: String,
-        required: true,
-        unique: true
+    attachments: {
+        type: [String]
     },
-    phone: {
-        type: String,
-        unique: true,
-        required: true
+    likes: {
+        type: [mongoose_1.Types.ObjectId],
+        ref: 'user'
     },
-    password: String,
-    confirmEmail: {
-        type: Boolean,
-        default: false
+    tags: {
+        type: [mongoose_1.Types.ObjectId],
+        ref: 'user'
     },
-    profilepic: {
-        type: String,
-        required: false
-    },
-    gender: {
-        type: String,
-        enum: user_enum_1.genderEnum,
-        default: user_enum_1.genderEnum.Male,
-    },
-    provider: {
-        type: String,
-        enum: user_enum_1.providerEnum,
-        default: user_enum_1.providerEnum.System
-    },
-    companyName: {
-        type: String,
-        unique: true
-    },
-    subject: {
-        type: [String],
-        enum: subject_enum_1.subjectEnum
-    },
-    teachingLanguage: {
-        type: String,
-        enum: subject_enum_1.teachingLanguageEnum
+    createdBy: {
+        type: mongoose_1.Types.ObjectId,
+        ref: 'user'
     },
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     },
-    students: [{
+    editedAt: {
+        type: Date,
+        default: Date.now
+    },
+    deletedAt: {
+        type: Date,
+        default: null
+    },
+    restoredAt: {
+        type: Date,
+        default: null
+    }
+});
+exports.chatSchema = new mongoose_1.default.Schema({
+    particepate: [{
             type: mongoose_1.Types.ObjectId,
-            ref: 'Student'
+            ref: 'user'
         }],
-    center: [{
-            type: mongoose_1.Types.ObjectId,
-            ref: 'Center'
-        }]
+    createdBy: {
+        type: mongoose_1.Types.ObjectId,
+        ref: 'user'
+    },
+    message: {
+        type: [messageSchema],
+        required: true
+    },
+    roomID: {
+        type: String,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: chat_enum_1.ChatEnum,
+        default: chat_enum_1.ChatEnum.ovm
+    },
+    group: {
+        type: String,
+        required: function () {
+            return this.type == chat_enum_1.ChatEnum.ovm;
+        }
+    },
+    groupImage: {
+        type: String,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    editedAt: {
+        type: Date,
+        default: Date.now
+    },
+    deletedAt: {
+        type: Date,
+        default: null
+    },
+    restoredAt: {
+        type: Date,
+        default: null
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    strict: true
 });
-const teacherModel = mongoose_1.default.model('Teacher', teacherSchema);
-exports.default = teacherModel;
+exports.chatModel = mongoose_1.default.model('chat', exports.chatSchema);

@@ -58,13 +58,13 @@ const assistantSchema = new mongoose.Schema<IAssistant>({
     toObject: { virtuals: true },
     })
 
-assistantSchema.virtual('userName').set(function(this,userName){
-    let [firstName,lastName] = userName.split(' ')
-    this.firstName = firstName
-    this.lastName = lastName
-}).get(function(this){
-    return `${this.firstName || ''} ${this.lastName || ''}`.trim();
-})
+// assistantSchema.virtual('userName').set(function(this,userName){
+//     let [firstName,lastName] = userName.split(' ')
+//     this.firstName = firstName
+//     this.lastName = lastName
+// }).get(function(this){
+//     return `${this.firstName || ''} ${this.lastName || ''}`.trim();
+// })
 
 const assistantModel = mongoose.model<IAssistant>('Assistant',assistantSchema)
 

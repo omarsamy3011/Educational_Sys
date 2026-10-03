@@ -90,12 +90,5 @@ const assistantSchema = new mongoose_1.default.Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
 });
-assistantSchema.virtual('userName').set(function (userName) {
-    let [firstName, lastName] = userName.split(' ');
-    this.firstName = firstName;
-    this.lastName = lastName;
-}).get(function () {
-    return `${this.firstName || ''} ${this.lastName || ''}`.trim();
-});
 const assistantModel = mongoose_1.default.model('Assistant', assistantSchema);
 exports.default = assistantModel;

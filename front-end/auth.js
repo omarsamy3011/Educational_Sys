@@ -1,6 +1,10 @@
 const tabs = document.querySelectorAll("[data-panel]");
 const panels = document.querySelectorAll(".form-panel");
 const message = document.querySelector("#form-message");
+const API_BASE =
+  window.location.port === "5500"
+    ? "http://127.0.0.1:3000"
+    : window.location.origin;
 
 function showPanel(panelId) {
   for (const panel of panels) {
@@ -21,7 +25,9 @@ function showMessage(text, state = "success") {
 }
 
 async function postJson(path, body) {
-  const response = await fetch(path, {
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -80,12 +86,22 @@ document.querySelector("#register-form").addEventListener("submit", (event) => {
     }
 
     const email = fields.get("email").trim();
-    await postJson("/signup/teacher", {
-      userName: fields.get("fullName").trim(),
+    const body = {
+      userName: fields.get("userName").trim(),
       email,
       phone: fields.get("phone").trim(),
       password,
-    });
+      subject: fields.getAll("subject"),
+      teachingLanguage: fields.get("teachingLanguage"),
+    };
+    for (const field of ["firstName", "lastName", "companyName"]) {
+      const value = fields.get(field).trim();
+      if (value) {
+        body[field] = value;
+      }
+    }
+
+    await postJson("/signup/teacher", body);
 
     document.querySelector("#verify-identifier").value = email;
     showPanel("verify-panel");

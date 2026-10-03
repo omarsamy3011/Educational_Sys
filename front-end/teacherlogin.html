@@ -27,12 +27,34 @@
                 <section id="register-panel" class="form-panel" role="tabpanel">
                     <h2>Create teacher account</h2>
                     <form id="register-form">
-                        <label for="register-name">Full name</label>
-                        <input id="register-name" name="fullName" autocomplete="name" required>
+                        <label for="register-username">Username</label>
+                        <input id="register-username" name="userName" autocomplete="username" required>
+                        <label for="register-first-name">First name (optional)</label>
+                        <input id="register-first-name" name="firstName" autocomplete="given-name">
+                        <label for="register-last-name">Last name (optional)</label>
+                        <input id="register-last-name" name="lastName" autocomplete="family-name">
                         <label for="register-email">Email</label>
                         <input id="register-email" name="email" type="email" autocomplete="email" required>
                         <label for="register-phone">Phone number</label>
                         <input id="register-phone" name="phone" type="tel" autocomplete="tel" required>
+                        <label for="register-company">Company name (optional)</label>
+                        <input id="register-company" name="companyName" autocomplete="organization">
+                        <label for="register-subjects">Subjects you teach</label>
+                        <select id="register-subjects" name="subject" multiple required>
+                            <option value="Math">Math</option>
+                            <option value="Physics">Physics</option>
+                            <option value="English">English</option>
+                            <option value="Science">Science</option>
+                            <option value="Biology">Biology</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Arabic">Arabic</option>
+                        </select>
+                        <label for="register-language">Teaching language</label>
+                        <select id="register-language" name="teachingLanguage" required>
+                            <option value="" selected disabled>Select a language</option>
+                            <option value="Arabic">Arabic</option>
+                            <option value="English">English</option>
+                        </select>
                         <label for="register-password">Password</label>
                         <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
                         <label for="register-confirm">Confirm password</label>
