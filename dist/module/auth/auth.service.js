@@ -16,6 +16,8 @@ const center_1 = __importDefault(require("../../db/model/center"));
 const parent_1 = __importDefault(require("../../db/model/parent"));
 const student_1 = __importDefault(require("../../db/model/student"));
 const teacher_1 = __importDefault(require("../../db/model/teacher"));
+const counter_1 = __importDefault(require("../../db/model/counter"));
+const qrcode_1 = __importDefault(require("qrcode"));
 class AuthService {
     assisReposatory;
     centerRepository;
@@ -129,21 +131,25 @@ class AuthService {
     }
     async studentSignup(data, file) {
         let existingSTD = await this.studentRepository.findone({ filter: {
-                $or: [
-                    { phone: data.phone },
-                    { userID: data.userID },
-                ]
+                phone: data.phone
             } });
         if (existingSTD) {
             if (existingSTD.phone === data.phone)
                 throw new error_exceptions_1.BadRequestError('Phone number already registered');
-            if (existingSTD.userID === data.userID)
-                throw new error_exceptions_1.BadRequestError('Username already taken');
         }
+        let userID;
+        do {
+            const counter = await counter_1.default.findByIdAndUpdate("studentUserID", { $inc: { sequence: 1 } }, { new: true, upsert: true, setDefaultsOnInsert: true }).exec();
+            if (!counter)
+                throw new Error("Unable to generate a student ID.");
+            userID = `STU-${String(counter.sequence).padStart(6, "0")}`;
+        } while (await student_1.default.exists({ userID }));
+        data.userID = userID;
         let hashedpass = await (0, security_1.genertateHash)({ plainText: data.password });
         data.password = hashedpass;
-        let picture;
-        return await this.studentRepository.create(data);
+        const qrCode = await qrcode_1.default.toDataURL(userID, { errorCorrectionLevel: "M", margin: 2 });
+        await this.studentRepository.create(data);
+        return { userID, qrCode };
     }
     async centerSignup(data, file) {
         let existingCenter = await this.centerRepository.findone({ filter: {

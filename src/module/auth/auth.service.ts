@@ -17,6 +17,8 @@ import { IStudent } from "../../common/interface/stud"
 import studentModel from "../../db/model/student"
 import { ITeacher } from "../../common/interface/teacher"
 import teacherModel from "../../db/model/teacher"
+import counterModel from "../../db/model/counter"
+import QRCode from "qrcode"
 
 
 class AuthService {
@@ -133,19 +135,28 @@ class AuthService {
     }
     async studentSignup(data:IStudent,file:Express.Multer.File){
         let existingSTD = await this.studentRepository.findone({filter:{
-        $or: [
-        { phone:data.phone },
-        { userID:data.userID },
-        ]
+        phone:data.phone
     }})
         if(existingSTD){
             if (existingSTD.phone === data.phone) throw new BadRequestError('Phone number already registered');
-            if (existingSTD.userID === data.userID) throw new BadRequestError('Username already taken');
         }
+        let userID: string
+        do {
+            const counter = await counterModel.findByIdAndUpdate(
+                "studentUserID",
+                { $inc: { sequence: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            ).exec()
+            if (!counter) throw new Error("Unable to generate a student ID.")
+            userID = `STU-${String(counter.sequence).padStart(6, "0")}`
+        } while (await studentModel.exists({ userID }))
+
+        data.userID = userID
         let hashedpass = await genertateHash({plainText:data.password})
         data.password = hashedpass
-        let picture
-        return await this.studentRepository.create(data)
+        const qrCode = await QRCode.toDataURL(userID, { errorCorrectionLevel: "M", margin: 2 })
+        await this.studentRepository.create(data)
+        return { userID, qrCode }
     }
     async centerSignup(data:ICenter,file:Express.Multer.File){
         let existingCenter = await this.centerRepository.findone({filter:{

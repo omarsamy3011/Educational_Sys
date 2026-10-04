@@ -34,6 +34,7 @@ const bootstrap = async () => {
     (0, connection_1.dbconnection)();
     app.listen(env_service_1.env.port, () => {
         console.log(`server is running on port ${env_service_1.env.port}`);
+        console.log(`connect on the ${env_service_1.env.server_IP}:${env_service_1.env.port}`);
     });
 };
 exports.bootstrap = bootstrap;

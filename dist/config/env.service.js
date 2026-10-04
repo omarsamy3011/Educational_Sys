@@ -22,5 +22,6 @@ exports.env = {
     s3_accessKey: process.env.s3_accessKey,
     s3_secretKey: process.env.s3_secretKey,
     s3_BucketName: process.env.s3_BucketName,
-    db_name: process.env.db_name
+    db_name: process.env.db_name,
+    server_IP: process.env.server_IP
 };

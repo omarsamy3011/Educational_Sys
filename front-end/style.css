@@ -298,6 +298,45 @@ a.role-link:hover span:last-child {
     color: #8f3e2e;
 }
 
+.student-credentials {
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    text-align: center;
+}
+
+.student-credentials h3 {
+    margin: 0 0 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.student-id-value {
+    margin-bottom: 8px;
+    color: var(--green-dark);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.student-credentials p:not(.student-id-value) {
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.student-id-qr {
+    display: block;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+    padding: 8px;
+    background: white;
+}
+
 .teacher-shell {
     max-width: 1160px;
 }

@@ -72,20 +72,23 @@
 
         const body = Object.fromEntries(fields.entries());
         delete body.confirmPassword;
-        await postJson(`/signup/${role}`, body);
+        const result = await postJson(`/signup/${role}`, body);
 
-        const identifier =
-          role === "student"
-            ? fields.get("userID")
-            : fields.get("name");
-        document.querySelector("#login-identifier").value = identifier.trim();
-        showPanel("login-panel");
-        showMessage(
-          message,
-          role === "student"
-            ? "Account created. Your student account must be confirmed before you can sign in."
-            : "Account created. You can now sign in.",
-        );
+        if (role === "student") {
+          document.querySelector("#student-id-value").textContent =
+            result.data.userID;
+          document.querySelector("#student-id-qr").src = result.data.qrCode;
+          document.querySelector("#student-credentials").hidden = false;
+          showMessage(
+            message,
+            `Account created. Your student number is ${result.data.userID}. Save it for signing in.`,
+          );
+        } else {
+          const identifier = fields.get("name");
+          document.querySelector("#login-identifier").value = identifier.trim();
+          showPanel("login-panel");
+          showMessage(message, "Account created. You can now sign in.");
+        }
       } catch (error) {
         showMessage(
           message,

@@ -31,8 +31,6 @@
                         <input id="register-first-name" name="firstName" autocomplete="given-name" required>
                         <label for="register-last-name">Last name</label>
                         <input id="register-last-name" name="lastName" autocomplete="family-name" required>
-                        <label for="register-user-id">Username</label>
-                        <input id="register-user-id" name="userID" autocomplete="username" required>
                         <label for="register-phone">Phone number</label>
                         <input id="register-phone" name="phone" type="tel" autocomplete="tel" required>
                         <label for="register-parent-phone">Parent or guardian phone</label>
@@ -58,11 +56,17 @@
                         <input id="register-confirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
                         <button class="submit-button" type="submit">Create account <span aria-hidden="true">&#8594;</span></button>
                     </form>
+                    <section id="student-credentials" class="student-credentials" aria-live="polite" hidden>
+                        <h3>Your student number</h3>
+                        <p id="student-id-value" class="student-id-value"></p>
+                        <p>Keep this number to sign in. You can also scan the QR code.</p>
+                        <img id="student-id-qr" class="student-id-qr" alt="QR code for your student number">
+                    </section>
                 </section>
                 <section id="login-panel" class="form-panel" role="tabpanel" hidden>
                     <h2>Welcome back</h2>
                     <form id="login-form">
-                        <label for="login-identifier">Username or phone number</label>
+                        <label for="login-identifier">Student number or phone number</label>
                         <input id="login-identifier" name="identifier" autocomplete="username" required>
                         <label for="login-password">Password</label>
                         <input id="login-password" name="password" type="password" autocomplete="current-password" required>
