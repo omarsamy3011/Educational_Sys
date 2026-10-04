@@ -298,6 +298,303 @@ a.role-link:hover span:last-child {
     color: #8f3e2e;
 }
 
+.teacher-shell {
+    max-width: 1160px;
+}
+
+.teacher-header,
+.teacher-actions,
+.teacher-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.teacher-greeting {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.text-button {
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: var(--green-dark);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.text-button:hover {
+    color: var(--coral);
+}
+
+.text-button:focus-visible {
+    outline: 3px solid #d7775f88;
+    outline-offset: 3px;
+}
+
+.teacher-welcome {
+    margin: 64px 0 35px;
+}
+
+.teacher-welcome h1 {
+    margin-bottom: 13px;
+    font-size: clamp(38px, 5vw, 58px);
+}
+
+.teacher-welcome > p:last-child,
+.teacher-subtext {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.teacher-dashboard {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1.1fr);
+    align-items: start;
+    gap: 22px;
+}
+
+.teacher-card {
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--coral);
+    background: var(--surface);
+    box-shadow: 0 18px 45px #294b3812;
+}
+
+.teacher-card-heading {
+    margin-bottom: 21px;
+}
+
+.teacher-card-heading .eyebrow {
+    margin-bottom: 8px;
+}
+
+.teacher-card-heading h2 {
+    margin-bottom: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 27px;
+    font-weight: 400;
+}
+
+.teacher-account-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 14px;
+    margin: -4px 0 19px;
+    padding: 14px;
+    background: var(--paper);
+    font-size: 12px;
+}
+
+.teacher-account-details dt {
+    color: var(--muted);
+}
+
+.teacher-account-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.teacher-form {
+    display: grid;
+    gap: 9px;
+}
+
+.teacher-form label {
+    margin-top: 5px;
+    color: #3d554c;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.teacher-form input,
+.teacher-form select {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: #fcfdfb;
+    color: var(--ink);
+}
+
+.teacher-form select[multiple] {
+    min-height: 124px;
+}
+
+.teacher-form input:focus-visible,
+.teacher-form select:focus-visible {
+    outline: 3px solid #d7775f88;
+    outline-offset: 2px;
+}
+
+.field-hint {
+    margin-top: -3px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.teacher-form .submit-button {
+    margin-top: 12px;
+}
+
+.profile-dialog {
+    width: min(100% - 32px, 560px);
+    max-height: min(90vh, 760px);
+    padding: 24px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--coral);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 18px 45px #18342e33;
+}
+
+.profile-dialog::backdrop {
+    background: #18342e88;
+    backdrop-filter: blur(2px);
+}
+
+.profile-dialog .teacher-card-heading {
+    margin-bottom: 16px;
+}
+
+.dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.dialog-actions .submit-button {
+    margin-top: 0;
+}
+
+.secondary-button {
+    min-height: 48px;
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.secondary-button:hover {
+    background: var(--soft-green);
+}
+
+.secondary-button:focus-visible {
+    outline: 3px solid #d7775f88;
+    outline-offset: 2px;
+}
+
+.danger-button {
+    min-height: 42px;
+    margin-top: 12px;
+    border: 1px solid #d9a092;
+    border-radius: 3px;
+    background: #fff8f5;
+    color: #8f3e2e;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.danger-button:hover {
+    background: #fff0eb;
+}
+
+.danger-button:focus-visible {
+    outline: 3px solid #d7775f88;
+    outline-offset: 2px;
+}
+
+.danger-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.students-card .teacher-card-heading {
+    margin-bottom: 12px;
+}
+
+.teacher-subtext {
+    margin-bottom: 16px;
+}
+
+.students-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.student-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 15px 0;
+    border-top: 1px solid var(--line);
+}
+
+.student-row strong {
+    display: block;
+    font-size: 14px;
+}
+
+.student-meta {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.student-detail {
+    margin-top: 18px;
+    padding: 17px;
+    border-left: 3px solid var(--green);
+    background: var(--soft-green);
+}
+
+.student-detail h3 {
+    margin: 0 0 12px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px;
+    font-weight: 400;
+}
+
+.student-detail-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 14px;
+    margin: 0;
+    font-size: 12px;
+}
+
+.student-detail-list dt {
+    color: var(--muted);
+}
+
+.student-detail-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.teacher-shell > .back-link {
+    margin-top: 27px;
+}
+
 [hidden] {
     display: none !important;
 }
@@ -329,6 +626,14 @@ a.role-link:hover span:last-child {
     .auth-intro > p:last-child {
         margin-bottom: 0;
     }
+
+    .teacher-welcome {
+        margin-top: 46px;
+    }
+
+    .teacher-dashboard {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 420px) {
@@ -338,5 +643,23 @@ a.role-link:hover span:last-child {
 
     .tab-button {
         font-size: 11px;
+    }
+
+    .teacher-header {
+        align-items: flex-start;
+    }
+
+    .teacher-actions {
+        align-items: flex-end;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .teacher-card {
+        padding: 17px;
+    }
+
+    .profile-dialog {
+        padding: 17px;
     }
 }

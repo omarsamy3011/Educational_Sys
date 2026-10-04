@@ -144,11 +144,10 @@ document.querySelector("#login-form").addEventListener("submit", (event) => {
     if (result.data?.accessToken) {
       sessionStorage.setItem("accessToken", result.data.accessToken);
       sessionStorage.setItem("refreshToken", result.data.refreshToken || "");
+      window.location.assign("teacher.html");
+      return;
     }
 
-    showMessage(
-      "Signed in successfully. Your session token is ready for authenticated requests.",
-    );
-    form.reset();
+    throw new Error("The server did not return an access token.");
   });
 });

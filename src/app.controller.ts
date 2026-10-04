@@ -3,7 +3,8 @@ import {Express} from "express"
 import { env } from "./config/env.service"
 import { dbconnection } from "./db/connection"
 import { successResponce } from "./common/exceptions/successresponce"
-import teacherAuthRouter from './module/auth/aurh.controller'
+import AuthRouter from './module/auth/aurh.controller'
+import TeacherRouter from './module/teacher/teacher.controller'
 import path from "node:path"
 import { globalErrorHandling } from "./middleware/errorHandling"
 import cors from 'cors'
@@ -21,7 +22,8 @@ export const bootstrap = async() =>{
     app.get('/check-health',async(req,res)=>{
         successResponce({res,message:'healthy'})
     })
-    app.use(teacherAuthRouter)
+    app.use(AuthRouter)
+    app.use('/teacher',TeacherRouter)
     redisService.connectRedis()
     app.use(globalErrorHandling)
     app.use(express.static(path.resolve(__dirname, "../front-end")))

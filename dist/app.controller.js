@@ -9,6 +9,7 @@ const env_service_1 = require("./config/env.service");
 const connection_1 = require("./db/connection");
 const successresponce_1 = require("./common/exceptions/successresponce");
 const aurh_controller_1 = __importDefault(require("./module/auth/aurh.controller"));
+const teacher_controller_1 = __importDefault(require("./module/teacher/teacher.controller"));
 const node_path_1 = __importDefault(require("node:path"));
 const errorHandling_1 = require("./middleware/errorHandling");
 const cors_1 = __importDefault(require("cors"));
@@ -26,6 +27,7 @@ const bootstrap = async () => {
         (0, successresponce_1.successResponce)({ res, message: 'healthy' });
     });
     app.use(aurh_controller_1.default);
+    app.use('/teacher', teacher_controller_1.default);
     redisService_1.redisService.connectRedis();
     app.use(errorHandling_1.globalErrorHandling);
     app.use(express_1.default.static(node_path_1.default.resolve(__dirname, "../front-end")));
