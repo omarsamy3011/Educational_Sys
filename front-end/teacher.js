@@ -9,7 +9,6 @@
   const profileDialog = document.querySelector("#profile-dialog");
   const studentsList = document.querySelector("#students-list");
   const studentsStatus = document.querySelector("#students-status");
-  const studentDetail = document.querySelector("#student-detail");
 
   if (!accessToken) {
     window.location.replace("teacherlogin.html");
@@ -52,28 +51,42 @@
   }
 
   function setProfile(profile) {
-    const subjectNames = ["Math", "Physics", "English", "Science", "Biology", "Chemistry", "Arabic"];
+    const subjectNames = [
+      "Math",
+      "Physics",
+      "English",
+      "Science",
+      "Biology",
+      "Chemistry",
+      "Arabic",
+    ];
     const languageNames = ["Arabic", "English"];
     const subjects = new Set(
       (profile.subject || []).map((subject) =>
         typeof subject === "number" ? subjectNames[subject] : subject,
       ),
     );
-    const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
+    const name = [profile.firstName, profile.lastName]
+      .filter(Boolean)
+      .join(" ");
 
     document.querySelector("#profile-name").textContent = name || "—";
-    document.querySelector("#profile-username").textContent = profile.userName || "—";
+    document.querySelector("#profile-username").textContent =
+      profile.userName || "—";
     document.querySelector("#profile-email").textContent = profile.email || "—";
     document.querySelector("#profile-phone").textContent = profile.phone || "—";
-    document.querySelector("#profile-company-name").textContent = profile.companyName || "—";
-    document.querySelector("#profile-gender-value").textContent = profile.gender || "—";
+    document.querySelector("#profile-company-name").textContent =
+      profile.companyName || "—";
+    document.querySelector("#profile-gender-value").textContent =
+      profile.gender || "—";
     document.querySelector("#profile-subject-values").textContent =
       [...subjects].filter(Boolean).join(", ") || "—";
     document.querySelector("#profile-language-value").textContent =
       typeof profile.teachingLanguage === "number"
         ? languageNames[profile.teachingLanguage] || "—"
         : profile.teachingLanguage || "—";
-    document.querySelector("#profile-picture-value").textContent = profile.profilepic || "—";
+    document.querySelector("#profile-picture-value").textContent =
+      profile.profilepic || "—";
     profileForm.elements.firstName.value = profile.firstName || "";
     profileForm.elements.lastName.value = profile.lastName || "";
     profileForm.elements.companyName.value = profile.companyName || "";
@@ -100,13 +113,18 @@
   }
 
   function studentName(student) {
-    return [student.firstName, student.lastName].filter(Boolean).join(" ") ||
+    return (
+      [student.firstName, student.lastName].filter(Boolean).join(" ") ||
       student.userID ||
-      "Student";
+      "Student"
+    );
   }
 
   function enumLabel(value, labels) {
-    if (typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value))) {
+    if (
+      typeof value === "number" ||
+      (typeof value === "string" && /^\d+$/.test(value))
+    ) {
       return labels[Number(value)] || String(value);
     }
     return value == null ? "" : String(value);
@@ -114,11 +132,10 @@
 
   function renderStudents(students) {
     studentsList.replaceChildren();
-    studentDetail.hidden = true;
-    studentDetail.replaceChildren();
 
     if (!students.length) {
-      studentsStatus.textContent = "No students are assigned to your account yet.";
+      studentsStatus.textContent =
+        "No students are assigned to your account yet.";
       return;
     }
 
@@ -131,6 +148,8 @@
       const item = document.createElement("li");
       item.className = "student-row";
 
+      const rowHeader = document.createElement("div");
+      rowHeader.className = "student-row-header";
       const summary = document.createElement("div");
       const name = document.createElement("strong");
       name.textContent = studentName(student);
@@ -147,9 +166,16 @@
       detailsButton.type = "button";
       detailsButton.className = "text-button";
       detailsButton.textContent = "Details";
-      detailsButton.addEventListener("click", () => loadStudent(student._id));
+      const studentDetail = document.createElement("section");
+      studentDetail.className = "student-detail";
+      studentDetail.setAttribute("aria-live", "polite");
+      studentDetail.hidden = true;
+      detailsButton.addEventListener("click", () =>
+        loadStudent(student._id, studentDetail),
+      );
 
-      item.append(summary, detailsButton);
+      rowHeader.append(summary, detailsButton);
+      item.append(rowHeader, studentDetail);
       studentsList.append(item);
     }
   }
@@ -166,14 +192,18 @@
     }
   }
 
-  async function loadStudent(studentId) {
+  async function loadStudent(studentId, studentDetail) {
     if (!studentId) {
       showMessage("This student record has no valid identifier.", "error");
       return;
     }
 
     try {
-      const student = await request(`/myStudents/${encodeURIComponent(studentId)}`);
+      studentDetail.hidden = false;
+      studentDetail.textContent = "Loading student details...";
+      const student = await request(
+        `/myStudents/${encodeURIComponent(studentId)}`,
+      );
       studentDetail.replaceChildren();
       const heading = document.createElement("h3");
       heading.textContent = studentName(student);
@@ -184,7 +214,10 @@
         ["Phone", student.phone],
         ["Grade", enumLabel(student.grade, ["S1", "S2", "S3"])],
         ["School", student.schoolName],
-        ["Learning language", enumLabel(student.learningLanguage, ["Arabic", "English"])],
+        [
+          "Learning language",
+          enumLabel(student.learningLanguage, ["Arabic", "English"]),
+        ],
       ];
       const list = document.createElement("dl");
       list.className = "student-detail-list";
@@ -202,7 +235,9 @@
       studentDetail.hidden = false;
     } catch (error) {
       showMessage(
-        error instanceof Error ? error.message : "Could not load student details.",
+        error instanceof Error
+          ? error.message
+          : "Could not load student details.",
         "error",
       );
     }
@@ -215,7 +250,14 @@
     const formData = new FormData(profileForm);
     const body = {};
 
-    for (const field of ["firstName", "lastName", "companyName", "gender", "teachingLanguage", "profilepic"]) {
+    for (const field of [
+      "firstName",
+      "lastName",
+      "companyName",
+      "gender",
+      "teachingLanguage",
+      "profilepic",
+    ]) {
       const value = formData.get(field).trim();
       if (value) {
         body[field] = value;
@@ -235,7 +277,9 @@
       showMessage("Your profile has been updated.");
     } catch (error) {
       showMessage(
-        error instanceof Error ? error.message : "Could not update your profile.",
+        error instanceof Error
+          ? error.message
+          : "Could not update your profile.",
         "error",
       );
     } finally {
@@ -248,44 +292,60 @@
     profileDialog.showModal();
     profileForm.elements.firstName.focus();
   });
-  document.querySelector("#close-profile-dialog").addEventListener("click", () => {
-    profileDialog.close();
-  });
-  document.querySelector("#cancel-profile-edit").addEventListener("click", () => {
-    profileDialog.close();
-  });
+  document
+    .querySelector("#close-profile-dialog")
+    .addEventListener("click", () => {
+      profileDialog.close();
+    });
+  document
+    .querySelector("#cancel-profile-edit")
+    .addEventListener("click", () => {
+      profileDialog.close();
+    });
 
-  document.querySelector("#refresh-students").addEventListener("click", loadStudents);
+  document
+    .querySelector("#refresh-students")
+    .addEventListener("click", loadStudents);
   document.querySelector("#logout-button").addEventListener("click", () => {
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("refreshToken");
     window.location.replace("teacherlogin.html");
   });
 
-  document.querySelector("#delete-account").addEventListener("click", async (event) => {
-    if (!window.confirm("Delete your teacher account? This action cannot be undone.")) {
-      return;
-    }
+  document
+    .querySelector("#delete-account")
+    .addEventListener("click", async (event) => {
+      if (
+        !window.confirm(
+          "Delete your teacher account? This action cannot be undone.",
+        )
+      ) {
+        return;
+      }
 
-    const button = event.currentTarget;
-    button.disabled = true;
-    try {
-      await request("/profile", { method: "DELETE" });
-      sessionStorage.removeItem("accessToken");
-      sessionStorage.removeItem("refreshToken");
-      window.location.replace("teacherlogin.html");
-    } catch (error) {
-      button.disabled = false;
-      showMessage(
-        error instanceof Error ? error.message : "Could not delete your account.",
-        "error",
-      );
-    }
-  });
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await request("/profile", { method: "DELETE" });
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+        window.location.replace("teacherlogin.html");
+      } catch (error) {
+        button.disabled = false;
+        showMessage(
+          error instanceof Error
+            ? error.message
+            : "Could not delete your account.",
+          "error",
+        );
+      }
+    });
 
   Promise.all([loadProfile(), loadStudents()]).catch((error) => {
     showMessage(
-      error instanceof Error ? error.message : "Could not load your teacher account.",
+      error instanceof Error
+        ? error.message
+        : "Could not load your teacher account.",
       "error",
     );
   });

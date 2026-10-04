@@ -3,22 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learning Center | Choose a role</title>
+    <title>Learning Center | Learn and grow together</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="page-shell">
-        <header class="brand"><span class="brand-mark">LC</span><span>Learning Center</span></header>
-        <section class="welcome-panel" aria-labelledby="welcome-title">
-            <p class="eyebrow">EDUCATIONAL SYSTEM</p>
-            <h1 id="welcome-title">A place to<br>make learning happen.</h1>
-            <p class="intro">Choose your account type to continue.</p>
+    <main class="home-page">
+        <header class="home-header">
+            <a class="home-brand" href="index.html" aria-label="Learning Center home">
+                <span class="brand-mark">LC</span><span>Learning Center</span>
+            </a>
+            <nav class="home-nav" aria-label="Main navigation">
+                <a href="#home">Home</a>
+                <a href="#portals">Portals</a>
+                <a href="teacherlogin.html">For teachers</a>
+            </nav>
+            <a class="header-cta" href="#portals">Get started <span aria-hidden="true">&#8594;</span></a>
+        </header>
+
+        <section class="home-hero" id="home" aria-labelledby="welcome-title">
+            <div class="hero-copy">
+                <p class="hero-eyebrow"><span></span> A PLACE TO LEARN, TEACH, AND GROW</p>
+                <h1 id="welcome-title">Learn at your pace.<br>Grow <span>anywhere.</span></h1>
+                <p class="hero-intro">One welcoming space for students, teachers, and learning centers to keep learning moving.</p>
+                <a class="hero-button" href="#portals">Choose your portal <span aria-hidden="true">&#8594;</span></a>
+                <div class="hero-proof" aria-label="Three connected learning communities">
+                    <span class="proof-icon" aria-hidden="true">&#10003;</span>
+                    <span><strong>One learning community</strong><br>Students · Teachers · Centers</span>
+                </div>
+            </div>
+
+            <div class="hero-art" aria-label="Student learning with a laptop">
+                <div class="art-sun"></div>
+                <div class="art-label art-label-top"><span class="label-dot"></span><span><strong>Student portal</strong><small>Your next step starts here</small></span></div>
+                <img class="hero-photo" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1100&q=85" alt="Students learning together around a laptop" fetchpriority="high">
+                <div class="art-label art-label-bottom"><span class="label-book" aria-hidden="true"></span><span><strong>Learning, together</strong><small>For every stage of the journey</small></span></div>
+                <span class="art-spark spark-one" aria-hidden="true">&#10022;</span>
+                <span class="art-spark spark-two" aria-hidden="true">&#10022;</span>
+            </div>
         </section>
-        <section class="role-list" aria-label="Account types">
-            <a class="role-link" href="teacherlogin.html"><span>Teacher</span><span aria-hidden="true">&#8594;</span></a>
-            <a class="role-link" href="studentlogin.html"><span>Student</span><span aria-hidden="true">&#8594;</span></a>
-            <div class="role-link role-unavailable" aria-disabled="true"><span>Parent</span><span class="role-note">Coming soon</span></div>
-            <a class="role-link" href="centerlogin.html"><span>Learning center</span><span aria-hidden="true">&#8594;</span></a>
+
+        <section class="portal-section" id="portals" aria-labelledby="portal-title">
+            <div class="portal-heading">
+                <div><p class="portal-kicker">START WHERE YOU ARE</p><h2 id="portal-title">Choose your portal</h2></div>
+                <p>Pick the account that fits you. You can register or sign in on the next page.</p>
+            </div>
+            <div class="portal-grid" aria-label="Available account types">
+                <a class="portal-card" href="studentlogin.html">
+                    <span class="portal-number">01</span><span class="portal-card-title">Student</span><span class="portal-card-copy">Continue your learning journey.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="portal-card" href="teacherlogin.html">
+                    <span class="portal-number">02</span><span class="portal-card-title">Teacher</span><span class="portal-card-copy">Share your knowledge and guide learners.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="portal-card" href="centerlogin.html">
+                    <span class="portal-number">03</span><span class="portal-card-title">Learning center</span><span class="portal-card-copy">Bring your learning community together.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <div class="portal-card portal-card-muted" aria-disabled="true">
+                    <span class="portal-number">04</span><span class="portal-card-title">Parent</span><span class="portal-card-copy">A dedicated family portal is coming soon.</span><span class="coming-soon">Coming soon</span>
+                </div>
+            </div>
         </section>
     </main>
 </body>
