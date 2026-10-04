@@ -29,6 +29,19 @@ router.patch("/profile", auth_middleware_1.auth, async (req, res) => {
     const data = await teacher_service_1.default.updateMyProfile(getTeacherId(req), parsed.data);
     (0, successresponce_1.successResponce)({ res, message: "Teacher profile updated successfully", data });
 });
+router.post("/assistants", auth_middleware_1.auth, async (req, res) => {
+    const parsed = teacher_validation_1.addTeacherAssistantSchema.safeParse(req.body);
+    if (!parsed.success) {
+        throw new error_exceptions_1.BadRequestError("Invalid assistant data", parsed.error.issues);
+    }
+    const data = await teacher_service_1.default.addAssistant(getTeacherId(req), parsed.data);
+    (0, successresponce_1.successResponce)({
+        res,
+        message: "Assistant added successfully",
+        status: 201,
+        data
+    });
+});
 router.delete("/profile", auth_middleware_1.auth, async (req, res) => {
     const data = await teacher_service_1.default.deleteMyProfile(getTeacherId(req));
     (0, successresponce_1.successResponce)({ res, message: "Teacher profile deleted successfully", data });

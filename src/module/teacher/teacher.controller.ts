@@ -4,7 +4,7 @@ import { BadRequestError } from "../../common/exceptions/error.exceptions";
 import { successResponce } from "../../common/exceptions/successresponce";
 import { auth, userRequest } from "../../middleware/auth.middleware";
 import teacherService from "./teacher.service";
-import { updateTeacherProfileSchema } from "./teacher.validation";
+import { addTeacherAssistantSchema, updateTeacherProfileSchema } from "./teacher.validation";
 
 const router = Router();
 
@@ -27,6 +27,20 @@ router.patch("/profile", auth, async (req: userRequest, res: Response) => {
     }
     const data = await teacherService.updateMyProfile(getTeacherId(req), parsed.data);
     successResponce({ res, message: "Teacher profile updated successfully", data });
+});
+
+router.post("/assistants", auth, async (req: userRequest, res: Response) => {
+    const parsed = addTeacherAssistantSchema.safeParse(req.body);
+    if (!parsed.success) {
+        throw new BadRequestError("Invalid assistant data", parsed.error.issues);
+    }
+    const data = await teacherService.addAssistant(getTeacherId(req), parsed.data);
+    successResponce({
+        res,
+        message: "Assistant added successfully",
+        status: 201,
+        data
+    });
 });
 
 router.delete("/profile", auth, async (req: userRequest, res: Response) => {

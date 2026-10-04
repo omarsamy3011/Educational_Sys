@@ -438,6 +438,12 @@ a.role-link:hover span:last-child {
     margin-bottom: 21px;
 }
 
+.teacher-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .teacher-card-heading .eyebrow {
     margin-bottom: 8px;
 }

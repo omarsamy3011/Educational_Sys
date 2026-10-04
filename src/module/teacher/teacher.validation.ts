@@ -15,3 +15,12 @@ export const updateTeacherProfileSchema = z.object({
 }).strict().refine((data) => Object.keys(data).length > 0, {
     message: "At least one profile field is required"
 });
+
+export const addTeacherAssistantSchema = z.object({
+    firstName: z.string().trim().min(1).max(80).optional(),
+    lastName: z.string().trim().min(1).max(80).optional(),
+    userName: z.string().trim().min(3).max(80),
+    email: z.string().trim().email().max(254),
+    phone: z.string().trim().min(1).max(32),
+    password: z.string().min(8).max(128)
+}).strict();

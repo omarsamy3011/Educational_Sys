@@ -7,6 +7,9 @@
   const dashboardMessage = document.querySelector("#dashboard-message");
   const profileForm = document.querySelector("#profile-form");
   const profileDialog = document.querySelector("#profile-dialog");
+  const assistantForm = document.querySelector("#assistant-form");
+  const assistantDialog = document.querySelector("#assistant-dialog");
+  const assistantFormMessage = document.querySelector("#assistant-form-message");
   const studentsList = document.querySelector("#students-list");
   const studentsStatus = document.querySelector("#students-status");
 
@@ -302,6 +305,56 @@
     .addEventListener("click", () => {
       profileDialog.close();
     });
+
+  function showAssistantFormMessage(message, state = "error") {
+    assistantFormMessage.textContent = message;
+    assistantFormMessage.dataset.state = state;
+    assistantFormMessage.hidden = false;
+  }
+
+  assistantForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = assistantForm.querySelector("button[type='submit']");
+    const originalLabel = submitButton.textContent;
+    const fields = new FormData(assistantForm);
+    const body = Object.fromEntries(
+      [...fields.entries()].map(([field, value]) => [field, value.trim()]),
+    );
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Adding...";
+    assistantFormMessage.hidden = true;
+    try {
+      const assistant = await request("/assistants", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      assistantForm.reset();
+      assistantDialog.close();
+      showMessage(`Assistant ${assistant.userName} was added to your team.`);
+    } catch (error) {
+      showAssistantFormMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not add the assistant.",
+      );
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalLabel;
+    }
+  });
+
+  document.querySelector("#add-assistant").addEventListener("click", () => {
+    assistantFormMessage.hidden = true;
+    assistantDialog.showModal();
+    assistantForm.elements.userName.focus();
+  });
+  document
+    .querySelector("#close-assistant-dialog")
+    .addEventListener("click", () => assistantDialog.close());
+  document
+    .querySelector("#cancel-assistant")
+    .addEventListener("click", () => assistantDialog.close());
 
   document
     .querySelector("#refresh-students")

@@ -35,7 +35,10 @@
                         <p class="eyebrow">YOUR DETAILS</p>
                         <h2 id="profile-title">Profile</h2>
                     </div>
-                    <button id="edit-profile" class="text-button" type="button">Edit profile</button>
+                    <div class="teacher-card-actions">
+                        <button id="add-assistant" class="text-button" type="button">Add assistant</button>
+                        <button id="edit-profile" class="text-button" type="button">Edit profile</button>
+                    </div>
                 </div>
                 <dl class="teacher-account-details">
                     <dt>Name</dt>
@@ -123,6 +126,41 @@
                 <div class="dialog-actions">
                     <button id="cancel-profile-edit" class="secondary-button" type="button">Cancel</button>
                     <button class="submit-button" type="submit">Save profile <span aria-hidden="true">&#8594;</span></button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="assistant-dialog" class="profile-dialog" aria-labelledby="add-assistant-title">
+            <div class="teacher-card-heading">
+                <div>
+                    <p class="eyebrow">YOUR TEAM</p>
+                    <h2 id="add-assistant-title">Add assistant</h2>
+                </div>
+                <button id="close-assistant-dialog" class="text-button" type="button" aria-label="Close add assistant">Close</button>
+            </div>
+            <p id="assistant-form-message" class="form-message" role="status" aria-live="polite" hidden></p>
+            <form id="assistant-form" class="teacher-form">
+                <label for="assistant-first-name">First name</label>
+                <input id="assistant-first-name" name="firstName" autocomplete="given-name" maxlength="80">
+
+                <label for="assistant-last-name">Last name</label>
+                <input id="assistant-last-name" name="lastName" autocomplete="family-name" maxlength="80">
+
+                <label for="assistant-username">Username</label>
+                <input id="assistant-username" name="userName" autocomplete="username" minlength="3" maxlength="80" required>
+
+                <label for="assistant-email">Email</label>
+                <input id="assistant-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+
+                <label for="assistant-phone">Phone number</label>
+                <input id="assistant-phone" name="phone" type="tel" autocomplete="tel" maxlength="32" required>
+
+                <label for="assistant-password">Password</label>
+                <input id="assistant-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+
+                <div class="dialog-actions">
+                    <button id="cancel-assistant" class="secondary-button" type="button">Cancel</button>
+                    <button class="submit-button" type="submit">Add assistant <span aria-hidden="true">&#8594;</span></button>
                 </div>
             </form>
         </dialog>
