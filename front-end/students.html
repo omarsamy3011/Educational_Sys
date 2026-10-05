@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student directory | Learning Center</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="students.js" defer></script>
+</head>
+<body>
+    <main class="page-shell directory-shell">
+        <header class="teacher-header">
+            <a class="brand" href="index.html">
+                <span class="brand-mark" aria-hidden="true">LC</span>
+                <span>Learning Center</span>
+            </a>
+            <nav class="directory-nav" aria-label="Teacher navigation">
+                <a class="text-button" href="teacher.html">Dashboard</a>
+                <button id="directory-logout" class="text-button" type="button">Sign out</button>
+            </nav>
+        </header>
+
+        <section class="directory-heading" aria-labelledby="directory-title">
+            <p class="eyebrow">YOUR CLASSROOM</p>
+            <h1 id="directory-title">Student directory</h1>
+            <p>Choose a student to view and manage their record.</p>
+        </section>
+
+        <p id="directory-message" class="form-message" role="status" aria-live="polite" hidden></p>
+
+        <div class="student-directory">
+            <section class="directory-roster" aria-labelledby="roster-title">
+                <div class="directory-roster-heading">
+                    <div>
+                        <p class="eyebrow">CLASS LIST</p>
+                        <h2 id="roster-title">Students</h2>
+                    </div>
+                    <button id="refresh-directory" class="text-button" type="button" aria-label="Refresh student list">Refresh</button>
+                </div>
+                <label class="directory-search-label" for="student-search">Find a student</label>
+                <input id="student-search" class="directory-search" type="search" autocomplete="off" placeholder="Search name, ID, school...">
+                <p id="roster-status" class="teacher-subtext" role="status" aria-live="polite">Loading students...</p>
+                <ul id="directory-students" class="directory-students" aria-label="Students"></ul>
+            </section>
+
+            <section id="student-record" class="directory-record" aria-labelledby="record-title" aria-live="polite">
+                <div class="record-empty">
+                    <p class="eyebrow">STUDENT RECORD</p>
+                    <h2 id="record-title">Select a student</h2>
+                    <p>The student profile and learning history will appear here.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

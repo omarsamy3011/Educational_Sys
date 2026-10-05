@@ -36,6 +36,7 @@
                         <h2 id="profile-title">Profile</h2>
                     </div>
                     <div class="teacher-card-actions">
+                        <a class="text-button" href="students.html">Student directory</a>
                         <button id="add-assistant" class="text-button" type="button">Add assistant</button>
                         <button id="edit-profile" class="text-button" type="button">Edit profile</button>
                     </div>
@@ -161,6 +162,66 @@
                 <div class="dialog-actions">
                     <button id="cancel-assistant" class="secondary-button" type="button">Cancel</button>
                     <button class="submit-button" type="submit">Add assistant <span aria-hidden="true">&#8594;</span></button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="student-profile-dialog" class="profile-dialog student-profile-dialog" aria-labelledby="student-profile-title">
+            <div class="teacher-card-heading">
+                <div>
+                    <p class="eyebrow">STUDENT RECORD</p>
+                    <h2 id="student-profile-title">Student profile</h2>
+                </div>
+                <button id="close-student-profile" class="text-button" type="button" aria-label="Close student profile">Close</button>
+            </div>
+            <p id="student-profile-message" class="form-message" role="status" aria-live="polite" hidden></p>
+            <section id="student-profile-view" aria-label="Student details">
+                <div id="student-profile-details" class="student-profile-details"></div>
+                <section class="student-history" aria-labelledby="student-history-title">
+                    <div class="student-section-heading">
+                        <p class="eyebrow">LEARNING RECORD</p>
+                        <h3 id="student-history-title">History</h3>
+                    </div>
+                    <ol id="student-history-list" class="student-history-list"></ol>
+                </section>
+                <div class="dialog-actions">
+                    <button id="edit-student" class="submit-button" type="button">Edit student <span aria-hidden="true">&#8594;</span></button>
+                </div>
+            </section>
+            <form id="student-edit-form" class="teacher-form" hidden>
+                <label for="student-first-name">First name</label>
+                <input id="student-first-name" name="firstName" autocomplete="given-name" maxlength="80">
+
+                <label for="student-last-name">Last name</label>
+                <input id="student-last-name" name="lastName" autocomplete="family-name" maxlength="80">
+
+                <label for="student-user-id">Student ID</label>
+                <input id="student-user-id" name="userID" maxlength="80">
+
+                <label for="student-phone">Phone</label>
+                <input id="student-phone" name="phone" type="tel" maxlength="32">
+
+                <label for="student-grade">Grade</label>
+                <select id="student-grade" name="grade">
+                    <option value="">Not specified</option>
+                    <option value="0">S1</option>
+                    <option value="1">S2</option>
+                    <option value="2">S3</option>
+                </select>
+
+                <label for="student-school">School</label>
+                <input id="student-school" name="schoolName" maxlength="160">
+
+                <label for="student-language">Learning language</label>
+                <select id="student-language" name="learningLanguage">
+                    <option value="">Not specified</option>
+                    <option value="0">Arabic</option>
+                    <option value="1">English</option>
+                </select>
+
+                <div class="dialog-actions">
+                    <button id="cancel-student-edit" class="secondary-button" type="button">Cancel</button>
+                    <button class="submit-button" type="submit">Save changes <span aria-hidden="true">&#8594;</span></button>
                 </div>
             </form>
         </dialog>

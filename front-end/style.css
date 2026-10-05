@@ -662,6 +662,349 @@ a.role-link:hover span:last-child {
     overflow-wrap: anywhere;
 }
 
+.student-profile-dialog {
+    width: min(100% - 32px, 720px);
+}
+
+.student-profile-details {
+    padding: 17px;
+    background: var(--paper);
+}
+
+.student-section-heading {
+    margin: 24px 0 12px;
+}
+
+.student-section-heading .eyebrow {
+    margin-bottom: 6px;
+}
+
+.student-section-heading h3 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.student-history-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.student-history-list li {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr);
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+}
+
+.student-history-list strong {
+    color: var(--muted);
+}
+
+.student-history-list span {
+    overflow-wrap: anywhere;
+}
+
+.student-history-list .student-history-empty {
+    display: block;
+    color: var(--muted);
+}
+
+.student-profile-dialog .dialog-actions {
+    margin-top: 18px;
+}
+
+.student-profile-dialog .dialog-actions .submit-button {
+    grid-column: 1 / -1;
+}
+
+.directory-shell {
+    max-width: 1240px;
+}
+
+.directory-nav {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.directory-heading {
+    margin: 52px 0 28px;
+}
+
+.directory-heading h1 {
+    margin-bottom: 10px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 42px;
+    font-weight: 400;
+}
+
+.directory-heading > p:last-child {
+    color: var(--muted);
+}
+
+.student-directory {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.6fr);
+    align-items: start;
+    gap: 22px;
+}
+
+.directory-roster,
+.directory-record {
+    min-width: 0;
+    min-height: 390px;
+    padding: 23px;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--coral);
+    background: var(--surface);
+    box-shadow: 0 18px 45px var(--theme-shadow-card-soft);
+}
+
+.directory-roster-heading,
+.record-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.directory-roster-heading .eyebrow,
+.record-heading .eyebrow {
+    margin-bottom: 7px;
+}
+
+.directory-roster-heading h2,
+.record-heading h2,
+.record-empty h2 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+
+.directory-search-label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--theme-warm-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.directory-search {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--theme-input);
+    color: var(--ink);
+}
+
+.directory-search:focus-visible {
+    outline: 3px solid var(--theme-focus-strong);
+    outline-offset: 2px;
+}
+
+.directory-roster .teacher-subtext {
+    margin: 13px 0 8px;
+    font-size: 12px;
+}
+
+.directory-students {
+    display: grid;
+    max-height: 620px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.directory-student-button {
+    display: grid;
+    width: 100%;
+    gap: 5px;
+    padding: 14px 11px;
+    border: 0;
+    border-top: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+}
+
+.directory-student-button:hover,
+.directory-student-button[aria-current="true"] {
+    background: var(--theme-accent-soft);
+}
+
+.directory-student-button[aria-current="true"] {
+    box-shadow: inset 3px 0 var(--coral);
+}
+
+.directory-student-button:focus-visible {
+    outline: 3px solid var(--theme-focus-strong);
+    outline-offset: -3px;
+}
+
+.directory-student-button strong {
+    font-size: 13px;
+}
+
+.directory-student-button span,
+.directory-empty,
+.record-empty > p:last-child,
+.record-loading,
+.directory-error {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.directory-empty {
+    padding: 14px 2px;
+}
+
+.record-empty {
+    padding: 28px 8px;
+}
+
+.record-empty h2 {
+    margin-bottom: 10px;
+}
+
+.directory-profile-details {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.55fr) minmax(0, 1.45fr);
+    gap: 0 16px;
+    margin: 0;
+}
+
+.directory-profile-details dt,
+.directory-profile-details dd {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.directory-profile-details dt {
+    color: var(--muted);
+}
+
+.directory-profile-details dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.directory-history {
+    margin-top: 27px;
+}
+
+.directory-history h3 {
+    margin: 0 0 10px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px;
+    font-weight: 400;
+}
+
+.directory-history-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.directory-history-list li {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.55fr) minmax(0, 1.45fr);
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.directory-history-list strong,
+.directory-history-empty {
+    color: var(--muted);
+}
+
+.directory-history-list span {
+    overflow-wrap: anywhere;
+}
+
+.directory-history-empty {
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+}
+
+.directory-edit-form {
+    max-width: 560px;
+}
+
+.directory-edit-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.directory-edit-actions .secondary-button,
+.directory-edit-actions .submit-button {
+    margin-top: 0;
+}
+
+@media (max-width: 760px) {
+    .student-directory {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .directory-students {
+        max-height: 330px;
+    }
+
+    .directory-heading {
+        margin-top: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .directory-roster,
+    .directory-record {
+        padding: 18px;
+    }
+
+    .directory-heading h1 {
+        font-size: 35px;
+    }
+
+    .directory-profile-details,
+    .directory-history-list li {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+
+    .directory-profile-details dd {
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .directory-nav {
+        gap: 12px;
+    }
+}
+
 .teacher-shell > .back-link {
     margin-top: 27px;
 }

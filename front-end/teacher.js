@@ -12,6 +12,19 @@
   const assistantFormMessage = document.querySelector("#assistant-form-message");
   const studentsList = document.querySelector("#students-list");
   const studentsStatus = document.querySelector("#students-status");
+  const studentProfileDialog = document.querySelector(
+    "#student-profile-dialog",
+  );
+  const studentProfileView = document.querySelector("#student-profile-view");
+  const studentProfileDetails = document.querySelector(
+    "#student-profile-details",
+  );
+  const studentHistoryList = document.querySelector("#student-history-list");
+  const studentEditForm = document.querySelector("#student-edit-form");
+  const studentProfileMessage = document.querySelector(
+    "#student-profile-message",
+  );
+  let activeStudent = null;
 
   if (!accessToken) {
     window.location.replace("teacherlogin.html");
@@ -168,17 +181,15 @@
       const detailsButton = document.createElement("button");
       detailsButton.type = "button";
       detailsButton.className = "text-button";
-      detailsButton.textContent = "Details";
-      const studentDetail = document.createElement("section");
-      studentDetail.className = "student-detail";
-      studentDetail.setAttribute("aria-live", "polite");
-      studentDetail.hidden = true;
-      detailsButton.addEventListener("click", () =>
-        loadStudent(student._id, studentDetail),
+      detailsButton.textContent = "Open profile";
+      detailsButton.setAttribute(
+        "aria-label",
+        `Open ${studentName(student)} profile`,
       );
+      detailsButton.addEventListener("click", () => loadStudent(student._id));
 
       rowHeader.append(summary, detailsButton);
-      item.append(rowHeader, studentDetail);
+      item.append(rowHeader);
       studentsList.append(item);
     }
   }
@@ -195,56 +206,209 @@
     }
   }
 
-  async function loadStudent(studentId, studentDetail) {
+  function displayValue(value) {
+    if (value == null || value === "") {
+      return "—";
+    }
+    if (Array.isArray(value)) {
+      return value.map(displayValue).join(", ");
+    }
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+
+  function humanizeKey(key) {
+    return key
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/^./, (character) => character.toUpperCase());
+  }
+
+  function enumValue(value, labels) {
+    if (
+      typeof value === "number" ||
+      (typeof value === "string" && /^\d+$/.test(value))
+    ) {
+      return String(value);
+    }
+    const index = labels.indexOf(value);
+    return index === -1 ? "" : String(index);
+  }
+
+  function renderStudentHistory(student) {
+    studentHistoryList.replaceChildren();
+    const historyKeys = Object.keys(student).filter((key) =>
+      /history|attendance|session|activity|progress|grades/i.test(key),
+    );
+    const historyEntries = historyKeys.flatMap((key) => {
+      const value = student[key];
+      if (Array.isArray(value)) {
+        return value.map((entry) => ({
+          label: humanizeKey(key),
+          value: entry,
+        }));
+      }
+      if (value && typeof value === "object") {
+        return Object.entries(value).map(([label, entry]) => ({
+          label: `${humanizeKey(key)} · ${humanizeKey(label)}`,
+          value: entry,
+        }));
+      }
+      return value == null || value === ""
+        ? []
+        : [{ label: humanizeKey(key), value }];
+    });
+
+    if (!historyEntries.length) {
+      const empty = document.createElement("li");
+      empty.className = "student-history-empty";
+      empty.textContent = "No learning history is available for this student.";
+      studentHistoryList.append(empty);
+      return;
+    }
+
+    for (const entry of historyEntries) {
+      const item = document.createElement("li");
+      const label = document.createElement("strong");
+      label.textContent = entry.label;
+      const value = document.createElement("span");
+      value.textContent = displayValue(entry.value);
+      item.append(label, value);
+      studentHistoryList.append(item);
+    }
+  }
+
+  function renderStudentProfile(student) {
+    activeStudent = student;
+    document.querySelector("#student-profile-title").textContent =
+      studentName(student);
+    studentProfileDetails.replaceChildren();
+    const details = document.createElement("dl");
+    details.className = "student-detail-list";
+    for (const [key, value] of Object.entries(student)) {
+      if (
+        /password|token|secret|^_id$|^__v$/i.test(key) ||
+        value == null ||
+        value === ""
+      ) {
+        continue;
+      }
+      const term = document.createElement("dt");
+      term.textContent = humanizeKey(key);
+      const description = document.createElement("dd");
+      description.textContent = displayValue(
+        key === "grade"
+          ? enumLabel(value, ["S1", "S2", "S3"])
+          : key === "learningLanguage"
+            ? enumLabel(value, ["Arabic", "English"])
+            : value,
+      );
+      details.append(term, description);
+    }
+    studentProfileDetails.append(details);
+    renderStudentHistory(student);
+    studentEditForm.elements.firstName.value = student.firstName || "";
+    studentEditForm.elements.lastName.value = student.lastName || "";
+    studentEditForm.elements.userID.value = student.userID || "";
+    studentEditForm.elements.phone.value = student.phone || "";
+    studentEditForm.elements.grade.value = enumValue(student.grade, [
+      "S1",
+      "S2",
+      "S3",
+    ]);
+    studentEditForm.elements.schoolName.value = student.schoolName || "";
+    studentEditForm.elements.learningLanguage.value = enumValue(
+      student.learningLanguage,
+      ["Arabic", "English"],
+    );
+    studentProfileMessage.hidden = true;
+    studentEditForm.hidden = true;
+    studentProfileView.hidden = false;
+  }
+
+  async function loadStudent(studentId) {
     if (!studentId) {
       showMessage("This student record has no valid identifier.", "error");
       return;
     }
 
     try {
-      studentDetail.hidden = false;
-      studentDetail.textContent = "Loading student details...";
+      studentProfileDialog.showModal();
+      studentProfileView.hidden = true;
+      studentEditForm.hidden = true;
+      studentProfileMessage.textContent = "Loading student profile...";
+      studentProfileMessage.hidden = false;
       const student = await request(
         `/myStudents/${encodeURIComponent(studentId)}`,
       );
-      studentDetail.replaceChildren();
-      const heading = document.createElement("h3");
-      heading.textContent = studentName(student);
-      studentDetail.append(heading);
-
-      const details = [
-        ["Student ID", student.userID],
-        ["Phone", student.phone],
-        ["Grade", enumLabel(student.grade, ["S1", "S2", "S3"])],
-        ["School", student.schoolName],
-        [
-          "Learning language",
-          enumLabel(student.learningLanguage, ["Arabic", "English"]),
-        ],
-      ];
-      const list = document.createElement("dl");
-      list.className = "student-detail-list";
-      for (const [label, value] of details) {
-        if (value == null || value === "") {
-          continue;
-        }
-        const term = document.createElement("dt");
-        term.textContent = label;
-        const description = document.createElement("dd");
-        description.textContent = value;
-        list.append(term, description);
-      }
-      studentDetail.append(list);
-      studentDetail.hidden = false;
+      renderStudentProfile(student);
     } catch (error) {
-      showMessage(
+      studentProfileMessage.textContent =
         error instanceof Error
           ? error.message
-          : "Could not load student details.",
-        "error",
-      );
+          : "Could not load student details.";
+      studentProfileMessage.dataset.state = "error";
+      studentProfileMessage.hidden = false;
     }
   }
+
+  studentEditForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeStudent?._id) {
+      return;
+    }
+    const submitButton = studentEditForm.querySelector("button[type='submit']");
+    const originalLabel = submitButton.textContent;
+    const fields = new FormData(studentEditForm);
+    const body = Object.fromEntries(
+      [...fields.entries()].map(([field, value]) => [field, value.trim()]),
+    );
+    for (const field of ["grade", "learningLanguage"]) {
+      body[field] = body[field] === "" ? null : Number(body[field]);
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Saving...";
+    studentProfileMessage.hidden = true;
+    try {
+      const student = await request(
+        `/myStudents/${encodeURIComponent(activeStudent._id)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      renderStudentProfile(student);
+      showMessage("Student profile updated.");
+      await loadStudents();
+    } catch (error) {
+      studentProfileMessage.textContent =
+        error instanceof Error
+          ? error.message
+          : "Could not update this student.";
+      studentProfileMessage.dataset.state = "error";
+      studentProfileMessage.hidden = false;
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalLabel;
+    }
+  });
+
+  document.querySelector("#edit-student").addEventListener("click", () => {
+    studentProfileView.hidden = true;
+    studentEditForm.hidden = false;
+    studentEditForm.elements.firstName.focus();
+  });
+  document
+    .querySelector("#cancel-student-edit")
+    .addEventListener("click", () => {
+      if (activeStudent) {
+        renderStudentProfile(activeStudent);
+      }
+    });
+  document
+    .querySelector("#close-student-profile")
+    .addEventListener("click", () => {
+      studentProfileDialog.close();
+    });
 
   profileForm.addEventListener("submit", async (event) => {
     event.preventDefault();
