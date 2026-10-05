@@ -70,7 +70,27 @@ export class DatabaseReposatory<TRawDoc> {
         filter:any,
         data:any
     }){
-        return this.model.updateOne(filter,data)
+        return this.model.updateOne({filter,data},{returnDocument:"after"})
+    }
+
+    findByIdAndUpdate({id,data,select,populate,lean}:{
+        id:string,
+        data:any,
+        select?:string,
+        populate?:string| PopulateOptions |PopulateOptions[],
+        lean?:boolean
+    }){
+        let query:any = this.model.findByIdAndUpdate(id,data,{returnDocument:"after"})
+        if(select){
+            query = query.select(select)
+        }
+        if(populate){
+            query = query.populate(populate)
+        }
+        if(lean){
+            query = query.lean(lean)
+        }
+        return query
     }
 
     updateMany({filter,data}:{

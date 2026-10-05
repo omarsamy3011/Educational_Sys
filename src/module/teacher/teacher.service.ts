@@ -118,6 +118,26 @@ export class TeacherService {
         return student
     }
 
+    async updateMyStudent(teacherId: string, studentId: string,data:object) {
+        const teacher = await this.teacherRepository.findone({
+            filter: { _id: teacherId ,
+                students: {$in :[studentId]}
+            },
+        select:'id'})        
+        if (!teacher) {
+            throw new NotFoundError("Teacher Is not Teaching This Student")
+        }
+        const updatedStudent = await this.studentRepository.findByIdAndUpdate({
+            id: studentId,
+            data: data,
+            select: "firstName lastName userID phone profilepic gender grade schoolName learningLanguage parentPhone balance"
+        })
+        if (!updatedStudent) {
+            throw new NotFoundError("Student not found")
+        }
+        return updatedStudent
+    }
+
     async addAssistant(teacherId: string, data: NewTeacherAssistant) {
         const teacher = await this.teacherRepository.findById({
             id: teacherId,
@@ -170,6 +190,21 @@ export class TeacherService {
             role: assistant.role,
             teacher: String(assistant.teacher)
         }
+    }
+
+    async getMyAssistants(teacherId: string) {
+        const teacher = await this.teacherRepository.findById({
+            id: teacherId,
+            populate: [{
+                path: "assistants",
+                select: "userName email phone firstName lastName"
+            }],
+            select: "assistants"
+        })
+        if (!teacher) {
+            throw new NotFoundError("Teacher account not found")
+        }
+        return teacher.assistants
     }
 }
 

@@ -195,8 +195,6 @@ class AuthService {
                 $or: [{ phone: identifier }, { userID: identifier }]
             } });
         if (studentData) {
-            if (!studentData.confirmAccount)
-                throw new error_exceptions_1.BadRequestError('Email Is Not Verified');
             let isMatched = await (0, security_1.compareHash)({ plainText: password, cypherText: studentData.password });
             if (isMatched) {
                 return this.tokenService.generateToken(studentData);
@@ -226,6 +224,9 @@ class AuthService {
         else {
             throw new error_exceptions_1.NotFoundError('Center Account Not Found');
         }
+    }
+    refreshToken(refreshToken) {
+        return this.tokenService.refreshAccessToken(refreshToken);
     }
     async teacherVerify(data) {
         let identifier = data.identifier;

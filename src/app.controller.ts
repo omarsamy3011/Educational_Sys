@@ -5,6 +5,7 @@ import { dbconnection } from "./db/connection"
 import { successResponce } from "./common/exceptions/successresponce"
 import AuthRouter from './module/auth/aurh.controller'
 import TeacherRouter from './module/teacher/teacher.controller'
+import SessionRouter from './module/session/session.controller'
 import path from "node:path"
 import { globalErrorHandling } from "./middleware/errorHandling"
 import cors from 'cors'
@@ -24,7 +25,9 @@ export const bootstrap = async() =>{
     })
     app.use(AuthRouter)
     app.use('/teacher',TeacherRouter)
+    app.use('/teacher',SessionRouter)
     redisService.connectRedis()
+    app.use('/vendor', express.static(path.resolve(__dirname, "../node_modules/jsqr/dist")))
     app.use(globalErrorHandling)
     app.use(express.static(path.resolve(__dirname, "../front-end")))
     dbconnection()

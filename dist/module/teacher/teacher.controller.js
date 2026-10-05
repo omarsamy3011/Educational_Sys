@@ -35,12 +35,7 @@ router.post("/assistants", auth_middleware_1.auth, async (req, res) => {
         throw new error_exceptions_1.BadRequestError("Invalid assistant data", parsed.error.issues);
     }
     const data = await teacher_service_1.default.addAssistant(getTeacherId(req), parsed.data);
-    (0, successresponce_1.successResponce)({
-        res,
-        message: "Assistant added successfully",
-        status: 201,
-        data
-    });
+    (0, successresponce_1.successResponce)({ res, message: "Assistant added successfully", status: 201, data });
 });
 router.delete("/profile", auth_middleware_1.auth, async (req, res) => {
     const data = await teacher_service_1.default.deleteMyProfile(getTeacherId(req));
@@ -57,5 +52,17 @@ router.get("/myStudents/:studentId", auth_middleware_1.auth, async (req, res) =>
     }
     const data = await teacher_service_1.default.getMyStudent(getTeacherId(req), studentId);
     (0, successresponce_1.successResponce)({ res, message: "Assigned student retrieved successfully", data });
+});
+router.patch("/myStudents/:studentId", auth_middleware_1.auth, async (req, res) => {
+    const { studentId } = req.params;
+    if (typeof studentId !== "string" || !mongoose_1.Types.ObjectId.isValid(studentId)) {
+        throw new error_exceptions_1.BadRequestError("Invalid student id");
+    }
+    const data = await teacher_service_1.default.updateMyStudent(getTeacherId(req), studentId, req.body);
+    (0, successresponce_1.successResponce)({ res, message: "Assigned student updated successfully", data });
+});
+router.get("/assistants", auth_middleware_1.auth, async (req, res) => {
+    const data = await teacher_service_1.default.getMyAssistants(getTeacherId(req.user.id));
+    (0, successresponce_1.successResponce)({ res, message: "Assigned assistants retrieved successfully", data });
 });
 exports.default = router;

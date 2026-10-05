@@ -67,7 +67,7 @@
   }
 
   async function request(path, options = {}) {
-    const response = await fetch(`${API_BASE}/teacher${path}`, {
+    const response = await window.authenticatedFetch(`${API_BASE}/teacher${path}`, {
       ...options,
       headers: {
         Authorization: `Bearer ${accessToken}`,

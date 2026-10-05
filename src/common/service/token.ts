@@ -22,9 +22,26 @@ export class TokenService {
                 break;
         }        
         let accessToken = jwt.sign({id:user._id},signature as string,{audience,expiresIn:'30m'})
-        let refreshToken = jwt.sign({id:user._id},signature as string,{audience,expiresIn:'1y'})
+        let refreshToken = jwt.sign(
+            { id: user._id, tokenType: "refresh" },
+            refreshSignature as string,
+            { audience, expiresIn: '1y' }
+        )
 
         return {accessToken,refreshToken}
+    }
+
+    refreshAccessToken(refreshToken:string){
+        const payload = this.decodeRefreshToken(refreshToken) as JwtPayload
+        const signature = payload.aud === "Admin"
+            ? env.admin_signature
+            : env.user_signature
+        const accessToken = jwt.sign(
+            { id: payload.id },
+            signature as string,
+            { audience: payload.aud as string, expiresIn: '30m' }
+        )
+        return { accessToken }
     }
 
     decodeToken(token:string){
@@ -50,20 +67,22 @@ export class TokenService {
     }
 
     decodeRefreshToken(refreshtoken:string){
-        let decodedtoken = jwt.decode(refreshtoken) as JwtPayload
-        if(!decodedtoken){
-            throw new BadRequestError('invalid token')
+        const decodedToken = jwt.decode(refreshtoken) as JwtPayload | null
+        if (
+            !decodedToken ||
+            decodedToken.tokenType !== "refresh" ||
+            (decodedToken.aud !== "Admin" && decodedToken.aud !== "User")
+        ) {
+            throw new BadRequestError("Invalid refresh token")
         }
-        let signature = undefined
-        switch (decodedtoken.aud) {
-            case "Admin":
-                signature = env.admin_signature
-                break;
-            default:
-                signature = env.user_signature
-                break;
+
+        const signature = decodedToken.aud === "Admin"
+            ? env.admin_refresh_signature
+            : env.user_refresh_signature
+        try {
+            return jwt.verify(refreshtoken, signature as string)
+        } catch (error) {
+            throw new BadRequestError("Invalid or expired refresh token", error)
         }
-        let data = jwt.verify(refreshtoken,signature as string)
-        return data
     }
 }

@@ -10,6 +10,7 @@ const connection_1 = require("./db/connection");
 const successresponce_1 = require("./common/exceptions/successresponce");
 const aurh_controller_1 = __importDefault(require("./module/auth/aurh.controller"));
 const teacher_controller_1 = __importDefault(require("./module/teacher/teacher.controller"));
+const session_controller_1 = __importDefault(require("./module/session/session.controller"));
 const node_path_1 = __importDefault(require("node:path"));
 const errorHandling_1 = require("./middleware/errorHandling");
 const cors_1 = __importDefault(require("cors"));
@@ -28,7 +29,9 @@ const bootstrap = async () => {
     });
     app.use(aurh_controller_1.default);
     app.use('/teacher', teacher_controller_1.default);
+    app.use('/teacher', session_controller_1.default);
     redisService_1.redisService.connectRedis();
+    app.use('/vendor', express_1.default.static(node_path_1.default.resolve(__dirname, "../node_modules/jsqr/dist")));
     app.use(errorHandling_1.globalErrorHandling);
     app.use(express_1.default.static(node_path_1.default.resolve(__dirname, "../front-end")));
     (0, connection_1.dbconnection)();

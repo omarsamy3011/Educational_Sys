@@ -3,7 +3,6 @@
     window.location.port === "5500"
       ? "http://127.0.0.1:3000"
       : window.location.origin;
-  const STORAGE_KEY = "teacherSessions.v1";
   const accessToken = sessionStorage.getItem("accessToken");
   const sessionLabel = document.querySelector("#active-session-label");
   const sessionBadge = document.querySelector("#active-session-badge");
@@ -11,30 +10,46 @@
   const review = document.querySelector("#student-review");
   const cameraPanel = document.querySelector("#camera-panel");
   const video = document.querySelector("#camera-video");
-  let sessions = loadSessions();
-  let activeSession = sessions.find((session) => session.active);
+  const scanCanvas = document.createElement("canvas");
+  const scanContext = scanCanvas.getContext("2d", { willReadFrequently: true });
+  let activeSession = null;
   let students = [];
   let pendingStudent = null;
   let cameraStream = null;
   let detector = null;
   let scanning = false;
+  let lastScanAt = 0;
+  let qrDecoderPromise = null;
 
   if (!accessToken) {
     window.location.replace("teacherlogin.html");
     return;
   }
 
-  function loadSessions() {
+  async function apiRequest(path, options = {}) {
+    const response = await window.authenticatedFetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${accessToken}`,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+      },
+    });
+    let result;
     try {
-      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      return Array.isArray(value) ? value : [];
+      result = await response.json();
     } catch {
-      return [];
+      throw new Error("The server returned an unreadable response.");
     }
-  }
-
-  function saveSessions() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+        window.location.replace("teacherlogin.html");
+      }
+      throw new Error(result.message || "The request could not be completed.");
+    }
+    return result.data;
   }
 
   function showMessage(text, state = "success") {
@@ -54,7 +69,7 @@
   function drawActiveSession() {
     if (!activeSession) {
       sessionLabel.textContent =
-        "No session is active on this device. Activate a session from the Sessions page first.";
+        "No session is active. Activate a session from the Sessions page first.";
       sessionBadge.textContent = "No active session";
       sessionBadge.classList.remove("is-active");
       document.querySelector("#start-scan").disabled = true;
@@ -63,12 +78,15 @@
       return;
     }
     sessionLabel.textContent = `Week ${activeSession.week} · Session ${activeSession.number}: ${activeSession.sequence}`;
-    sessionBadge.textContent = "Active on this device";
+    sessionBadge.textContent = "Active";
     sessionBadge.classList.add("is-active");
+    document.querySelector("#start-scan").disabled = false;
+    document.querySelector("#student-id-input").disabled = false;
+    document.querySelector("#student-id-form button").disabled = false;
   }
 
   async function loadStudents() {
-    const response = await fetch(`${API_BASE}/teacher/myStudents`, {
+    const response = await window.authenticatedFetch(`${API_BASE}/teacher/myStudents`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     let result;
@@ -88,12 +106,22 @@
     students = Array.isArray(result.data) ? result.data.filter(Boolean) : [];
   }
 
+  async function loadActiveSession() {
+    const sessions = await apiRequest("/teacher/sessions");
+    activeSession = Array.isArray(sessions)
+      ? sessions.find((session) => session.active) || null
+      : null;
+  }
+
   function showStudent(student) {
     if (!activeSession) {
       showMessage("Activate a session before recording attendance.", "error");
       return;
     }
-    if ((activeSession.attendance || []).includes(String(student._id))) {
+    const isPresent = (activeSession.attendance || []).some((entry) =>
+      String(entry.student?._id || entry.student) === String(student._id),
+    );
+    if (isPresent) {
       showMessage(
         `${studentName(student)} is already marked present.`,
         "error",
@@ -152,34 +180,94 @@
   }
 
   async function scanFrames() {
-    if (!scanning || !detector) return;
+    if (!scanning) return;
+    if (Date.now() - lastScanAt < 200) {
+      requestAnimationFrame(scanFrames);
+      return;
+    }
+    if (!video.videoWidth || !video.videoHeight) {
+      requestAnimationFrame(scanFrames);
+      return;
+    }
+    lastScanAt = Date.now();
     try {
-      const codes = await detector.detect(video);
-      if (codes.length && codes[0].rawValue) {
-        findByIdentifier(codes[0].rawValue);
+      let rawValue;
+      if (detector) {
+        const codes = await detector.detect(video);
+        rawValue = codes[0]?.rawValue;
+      } else if (scanContext && video.videoWidth && video.videoHeight) {
+        scanCanvas.width = video.videoWidth;
+        scanCanvas.height = video.videoHeight;
+        scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+        const image = scanContext.getImageData(
+          0,
+          0,
+          scanCanvas.width,
+          scanCanvas.height,
+        );
+        rawValue = window.jsQR(
+          image.data,
+          image.width,
+          image.height,
+          { inversionAttempts: "dontInvert" },
+        )?.data;
+      }
+      if (rawValue) {
+        findByIdentifier(rawValue);
         stopCamera();
         return;
       }
-    } catch {
+    } catch (error) {
       document.querySelector("#camera-status").textContent =
-        "Could not read a QR code. Try adjusting the camera or enter the ID manually.";
+        error instanceof Error
+          ? `QR scanning failed: ${error.message}`
+          : "QR scanning failed. Enter the student ID manually.";
       stopCamera();
       return;
     }
     requestAnimationFrame(scanFrames);
   }
 
+  function loadQrDecoder() {
+    if (qrDecoderPromise) return qrDecoderPromise;
+    qrDecoderPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = `${API_BASE}/vendor/jsQR.js`;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Could not load the QR scanner."));
+      document.head.append(script);
+    });
+    return qrDecoderPromise;
+  }
+
+  function cameraErrorMessage(error) {
+    if (error instanceof Error && error.name === "NotAllowedError") {
+      return "Camera permission was denied. Allow camera access in your browser settings, then try again.";
+    }
+    if (error instanceof Error && error.name === "NotFoundError") {
+      return "No camera was found on this device.";
+    }
+    if (error instanceof Error && error.name === "NotReadableError") {
+      return "The camera is already in use or unavailable. Close other camera apps and try again.";
+    }
+    if (!window.isSecureContext) {
+      return "Camera access requires HTTPS or localhost. Open this page on a secure connection.";
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return "This browser does not provide camera access. Use HTTPS or a supported browser, or enter the student ID manually.";
+    }
+    return error instanceof Error
+      ? `Could not open the camera: ${error.message}`
+      : "Could not open the camera. Check browser camera permissions.";
+  }
+
   async function startCamera() {
     if (!activeSession) return;
-    if (!("BarcodeDetector" in window)) {
-      showMessage(
-        "QR scanning is not supported in this browser. Enter the student ID manually.",
-        "error",
-      );
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      showMessage(cameraErrorMessage(), "error");
       return;
     }
     try {
-      detector = new BarcodeDetector({ formats: ["qr_code"] });
       cameraStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
@@ -187,15 +275,25 @@
       video.srcObject = cameraStream;
       await video.play();
       cameraPanel.hidden = false;
+      detector = null;
+      if ("BarcodeDetector" in window) {
+        try {
+          detector = new BarcodeDetector({ formats: ["qr_code"] });
+        } catch {
+          detector = null;
+        }
+      }
+      if (!detector) {
+        document.querySelector("#camera-status").textContent =
+          "Loading QR scanner...";
+        await loadQrDecoder();
+      }
       document.querySelector("#camera-status").textContent =
         "Point the camera at the student's QR code.";
       scanning = true;
       requestAnimationFrame(scanFrames);
-    } catch {
-      showMessage(
-        "Camera access was unavailable. Allow camera permission or enter the student ID manually.",
-        "error",
-      );
+    } catch (error) {
+      showMessage(cameraErrorMessage(error), "error");
       stopCamera();
     }
   }
@@ -225,22 +323,36 @@
   });
   document
     .querySelector("#confirm-attendance")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
       if (!activeSession || !pendingStudent) return;
-      activeSession.attendance = [
-        ...new Set([
-          ...(activeSession.attendance || []),
-          String(pendingStudent._id),
-        ]),
-      ];
-      saveSessions();
-      const name = studentName(pendingStudent);
-      pendingStudent = null;
-      review.hidden = true;
-      document.querySelector("#student-id-input").value = "";
-      showMessage(
-        `${name} recorded as present for Week ${activeSession.week}, Session ${activeSession.number}.`,
-      );
+      const confirmButton = document.querySelector("#confirm-attendance");
+      confirmButton.disabled = true;
+      try {
+        const checkedInStudent = pendingStudent;
+        const result = await apiRequest(
+          `/teacher/sessions/${activeSession._id}/attendance`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              identifier: checkedInStudent.userID || checkedInStudent._id,
+            }),
+          },
+        );
+        activeSession = result.session;
+        pendingStudent = null;
+        review.hidden = true;
+        document.querySelector("#student-id-input").value = "";
+        showMessage(
+          `${studentName(checkedInStudent)} recorded as present for Week ${activeSession.week}, Session ${activeSession.number}.`,
+        );
+      } catch (error) {
+        showMessage(
+          error instanceof Error ? error.message : "Could not record attendance.",
+          "error",
+        );
+      } finally {
+        confirmButton.disabled = false;
+      }
     });
   document
     .querySelector("#attendance-signout")
@@ -251,14 +363,16 @@
       window.location.replace("teacherlogin.html");
     });
 
-  drawActiveSession();
-  loadStudents().catch((error) =>
-    showMessage(
-      error instanceof Error
-        ? error.message
-        : "Could not load assigned students.",
-      "error",
-    ),
-  );
+  Promise.all([loadStudents(), loadActiveSession()])
+    .then(drawActiveSession)
+    .catch((error) => {
+      drawActiveSession();
+      showMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not load the attendance page.",
+        "error",
+      );
+    });
   window.addEventListener("pagehide", stopCamera);
 })();

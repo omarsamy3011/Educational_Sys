@@ -3,7 +3,6 @@
     window.location.port === "5500"
       ? "http://127.0.0.1:3000"
       : window.location.origin;
-  const STORAGE_KEY = "teacherSessions.v1";
   const accessToken = sessionStorage.getItem("accessToken");
   const form = document.querySelector("#create-session-form");
   const sessionsList = document.querySelector("#sessions-list");
@@ -11,28 +10,41 @@
   const attendanceDialog = document.querySelector("#attendance-dialog");
   const studentDetailDialog = document.querySelector("#student-detail-dialog");
   let students = [];
-  let sessions = loadSessions();
+  let sessions = [];
 
   if (!accessToken) {
     window.location.replace("teacherlogin.html");
     return;
   }
 
-  function loadSessions() {
+  async function apiRequest(path, options = {}) {
+    const response = await window.authenticatedFetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${accessToken}`,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+      },
+    });
+    let result;
     try {
-      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      return Array.isArray(value) ? value : [];
+      result = await response.json();
     } catch {
-      return [];
+      throw new Error("The server returned an unreadable response.");
     }
-  }
-
-  function saveSessions() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+        window.location.replace("teacherlogin.html");
+      }
+      throw new Error(result.message || "The request could not be completed.");
+    }
+    return result.data;
   }
 
   async function requestStudents() {
-    const response = await fetch(`${API_BASE}/teacher/myStudents`, {
+    const response = await window.authenticatedFetch(`${API_BASE}/teacher/myStudents`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     let result;
@@ -50,6 +62,11 @@
       throw new Error(result.message || "Could not load assigned students.");
     }
     return Array.isArray(result.data) ? result.data.filter(Boolean) : [];
+  }
+
+  async function requestSessions() {
+    const result = await apiRequest("/teacher/sessions");
+    return Array.isArray(result) ? result : [];
   }
 
   function showMessage(text, state = "success") {
@@ -121,7 +138,11 @@
   }
 
   function showAttendance(session) {
-    const present = new Set(session.attendance || []);
+    const present = new Set(
+      (session.attendance || []).map((entry) =>
+        String(entry.student?._id || entry.student),
+      ),
+    );
     const presentList = document.querySelector("#present-list");
     const absentList = document.querySelector("#absent-list");
     const presentStudents = students.filter((student) =>
@@ -160,7 +181,7 @@
     if (!sessions.length) {
       const empty = document.createElement("p");
       empty.className = "sessions-empty";
-      empty.textContent = "No sessions have been created on this device.";
+      empty.textContent = "No sessions have been created yet.";
       sessionsList.append(empty);
       return;
     }
@@ -187,12 +208,31 @@
       toggle.type = "button";
       toggle.className = session.active ? "secondary-button" : "submit-button";
       toggle.textContent = session.active ? "Deactivate" : "Activate";
-      toggle.addEventListener("click", () => {
-        const wasActive = session.active;
-        for (const item of sessions) item.active = false;
-        session.active = !wasActive;
-        saveSessions();
-        renderSessions();
+      toggle.addEventListener("click", async () => {
+        toggle.disabled = true;
+        try {
+          const updated = await apiRequest(
+            `/teacher/sessions/${session._id}/active`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ active: !session.active }),
+            },
+          );
+          sessions = sessions.map((item) => ({
+            ...item,
+            active: String(item._id) === String(updated._id) && updated.active,
+          }));
+          renderSessions();
+          showMessage(
+            updated.active ? "Session activated." : "Session deactivated.",
+          );
+        } catch (error) {
+          showMessage(
+            error instanceof Error ? error.message : "Could not update session.",
+            "error",
+          );
+          toggle.disabled = false;
+        }
       });
       const view = document.createElement("button");
       view.type = "button";
@@ -205,17 +245,13 @@
     }
   }
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const fields = new FormData(form);
     const session = {
-      id: crypto.randomUUID(),
       sequence: String(fields.get("sequence")).trim(),
       week: Number(fields.get("week")),
       number: Number(fields.get("number")),
-      active: false,
-      attendance: [],
-      createdAt: new Date().toISOString(),
     };
     if (!session.sequence || session.week < 1 || session.number < 1) {
       showMessage(
@@ -224,12 +260,21 @@
       );
       return;
     }
-    sessions.push(session);
-    saveSessions();
-    renderSessions();
-    form.reset();
-    setSuggestions();
-    showMessage("Session created on this device.");
+    try {
+      sessions.push(await apiRequest("/teacher/sessions", {
+        method: "POST",
+        body: JSON.stringify(session),
+      }));
+      renderSessions();
+      form.reset();
+      setSuggestions();
+      showMessage("Session created successfully.");
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "Could not create session.",
+        "error",
+      );
+    }
   });
 
   document.querySelector("#sessions-signout").addEventListener("click", () => {
@@ -244,9 +289,10 @@
     .querySelector("#close-student-detail")
     .addEventListener("click", () => studentDetailDialog.close());
 
-  requestStudents()
-    .then((result) => {
-      students = result;
+  Promise.all([requestStudents(), requestSessions()])
+    .then(([studentResult, sessionResult]) => {
+      students = studentResult;
+      sessions = sessionResult;
       renderSessions();
       setSuggestions();
     })

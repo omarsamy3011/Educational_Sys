@@ -49,7 +49,20 @@ class DatabaseReposatory {
         return query;
     }
     updateone({ filter, data }) {
-        return this.model.updateOne(filter, data);
+        return this.model.updateOne({ filter, data }, { returnDocument: "after" });
+    }
+    findByIdAndUpdate({ id, data, select, populate, lean }) {
+        let query = this.model.findByIdAndUpdate(id, data, { returnDocument: "after" });
+        if (select) {
+            query = query.select(select);
+        }
+        if (populate) {
+            query = query.populate(populate);
+        }
+        if (lean) {
+            query = query.lean(lean);
+        }
+        return query;
     }
     updateMany({ filter, data }) {
         return this.model.updateMany(filter, data);

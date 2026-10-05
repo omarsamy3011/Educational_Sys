@@ -26,8 +26,16 @@ class TokenService {
                 break;
         }
         let accessToken = jsonwebtoken_1.default.sign({ id: user._id }, signature, { audience, expiresIn: '30m' });
-        let refreshToken = jsonwebtoken_1.default.sign({ id: user._id }, signature, { audience, expiresIn: '1y' });
+        let refreshToken = jsonwebtoken_1.default.sign({ id: user._id, tokenType: "refresh" }, refreshSignature, { audience, expiresIn: '1y' });
         return { accessToken, refreshToken };
+    }
+    refreshAccessToken(refreshToken) {
+        const payload = this.decodeRefreshToken(refreshToken);
+        const signature = payload.aud === "Admin"
+            ? env_service_1.env.admin_signature
+            : env_service_1.env.user_signature;
+        const accessToken = jsonwebtoken_1.default.sign({ id: payload.id }, signature, { audience: payload.aud, expiresIn: '30m' });
+        return { accessToken };
     }
     decodeToken(token) {
         let decodedtoken = jsonwebtoken_1.default.decode(token);
@@ -52,21 +60,21 @@ class TokenService {
         }
     }
     decodeRefreshToken(refreshtoken) {
-        let decodedtoken = jsonwebtoken_1.default.decode(refreshtoken);
-        if (!decodedtoken) {
-            throw new error_exceptions_1.BadRequestError('invalid token');
+        const decodedToken = jsonwebtoken_1.default.decode(refreshtoken);
+        if (!decodedToken ||
+            decodedToken.tokenType !== "refresh" ||
+            (decodedToken.aud !== "Admin" && decodedToken.aud !== "User")) {
+            throw new error_exceptions_1.BadRequestError("Invalid refresh token");
         }
-        let signature = undefined;
-        switch (decodedtoken.aud) {
-            case "Admin":
-                signature = env_service_1.env.admin_signature;
-                break;
-            default:
-                signature = env_service_1.env.user_signature;
-                break;
+        const signature = decodedToken.aud === "Admin"
+            ? env_service_1.env.admin_refresh_signature
+            : env_service_1.env.user_refresh_signature;
+        try {
+            return jsonwebtoken_1.default.verify(refreshtoken, signature);
         }
-        let data = jsonwebtoken_1.default.verify(refreshtoken, signature);
-        return data;
+        catch (error) {
+            throw new error_exceptions_1.BadRequestError("Invalid or expired refresh token", error);
+        }
     }
 }
 exports.TokenService = TokenService;

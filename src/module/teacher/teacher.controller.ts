@@ -34,13 +34,8 @@ router.post("/assistants", auth, async (req: userRequest, res: Response) => {
     if (!parsed.success) {
         throw new BadRequestError("Invalid assistant data", parsed.error.issues);
     }
-    const data = await teacherService.addAssistant(getTeacherId(req), parsed.data);
-    successResponce({
-        res,
-        message: "Assistant added successfully",
-        status: 201,
-        data
-    });
+    const data = await teacherService.addAssistant(getTeacherId(req), parsed.data)
+    successResponce({res,message: "Assistant added successfully",status: 201,data})
 });
 
 router.delete("/profile", auth, async (req: userRequest, res: Response) => {
@@ -61,5 +56,19 @@ router.get("/myStudents/:studentId", auth, async (req: userRequest, res: Respons
     const data = await teacherService.getMyStudent(getTeacherId(req), studentId);
     successResponce({ res, message: "Assigned student retrieved successfully", data });
 });
+
+router.patch("/myStudents/:studentId", auth, async (req: userRequest, res: Response) => {
+    const { studentId } = req.params;
+    if (typeof studentId !== "string" || !Types.ObjectId.isValid(studentId)) {
+        throw new BadRequestError("Invalid student id");
+    }
+    const data = await teacherService.updateMyStudent(getTeacherId(req), studentId,req.body);
+    successResponce({ res, message: "Assigned student updated successfully", data })
+});
+
+router.get("/assistants", auth, async (req: userRequest, res: Response) => {
+    const data = await teacherService.getMyAssistants(getTeacherId(req.user.id));
+    successResponce({ res, message: "Assigned assistants retrieved successfully", data })
+})
 
 export default router;
