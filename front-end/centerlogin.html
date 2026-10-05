@@ -3,59 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learning center access | Learning Center</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="role-auth.js" defer></script>
-    <script src="center.js" defer></script>
+    <title>Redirecting… | Learning Center</title>
+    <meta http-equiv="refresh" content="0; url=login.html?role=center">
+    <script>window.location.replace("login.html?role=center");</script>
 </head>
 <body>
-    <main class="page-shell auth-shell">
-        <header class="brand"><a class="brand-mark" href="index.html" aria-label="Learning Center home">LC</a><span>Learning Center</span></header>
-        <a class="back-link" href="index.html">&#8592; All account types</a>
-        <section class="auth-layout" aria-labelledby="auth-title">
-            <div class="auth-intro">
-                <p class="eyebrow">LEARNING CENTER PORTAL</p>
-                <h1 id="auth-title">Bring your<br>community together.</h1>
-                <p>Register your learning center or sign in to continue.</p>
-            </div>
-            <div class="auth-panel">
-                <div class="tab-list" role="tablist" aria-label="Learning center account actions">
-                    <button class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="register-panel" data-panel="register-panel">Register</button>
-                    <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="login-panel" data-panel="login-panel">Sign in</button>
-                </div>
-                <p class="form-message" id="form-message" role="status" aria-live="polite" hidden></p>
-                <section id="register-panel" class="form-panel" role="tabpanel">
-                    <h2>Create learning center account</h2>
-                    <form id="register-form">
-                        <label for="register-name">Center name</label>
-                        <input id="register-name" name="name" autocomplete="organization" required>
-                        <label for="register-phone">Phone number</label>
-                        <input id="register-phone" name="phone" type="tel" autocomplete="tel" required>
-                        <label for="register-localphone">Local phone (optional)</label>
-                        <input id="register-localphone" name="localphone" type="tel">
-                        <label for="register-location">Address or text location (optional)</label>
-                        <input id="register-location" name="textlocation" autocomplete="street-address">
-                        <label for="register-maplocation">Map location link (optional)</label>
-                        <input id="register-maplocation" name="Maplocation" type="url" placeholder="https://maps.example.com/...">
-                        <label for="register-password">Password</label>
-                        <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
-                        <label for="register-confirm">Confirm password</label>
-                        <input id="register-confirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
-                        <button class="submit-button" type="submit">Create account <span aria-hidden="true">&#8594;</span></button>
-                    </form>
-                </section>
-                <section id="login-panel" class="form-panel" role="tabpanel" hidden>
-                    <h2>Welcome back</h2>
-                    <form id="login-form">
-                        <label for="login-identifier">Center name or phone number</label>
-                        <input id="login-identifier" name="identifier" autocomplete="username" required>
-                        <label for="login-password">Password</label>
-                        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
-                        <button class="submit-button" type="submit">Sign in <span aria-hidden="true">&#8594;</span></button>
-                    </form>
-                </section>
-            </div>
-        </section>
-    </main>
+    <p>This page moved. <a href="login.html?role=center">Continue</a>.</p>
 </body>
 </html>

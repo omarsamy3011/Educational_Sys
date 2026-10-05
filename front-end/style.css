@@ -1369,7 +1369,7 @@ body:has(.home-page) {
 
 .portal-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     border: 1px solid var(--theme-border-strong);
     border-radius: 16px;
     overflow: hidden;

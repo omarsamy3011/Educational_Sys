@@ -3,108 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessions | Learning Center</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="sessions.css">
-    <script src="auth-session.js" defer></script>
-    <script src="sessions.js" defer></script>
+    <title>Redirecting… | Learning Center</title>
+    <meta http-equiv="refresh" content="0; url=app.html#/sessions">
+    <script>window.location.replace("app.html#/sessions");</script>
 </head>
 <body>
-    <main class="page-shell sessions-shell">
-        <header class="teacher-header">
-            <a class="brand" href="index.html">
-                <span class="brand-mark" aria-hidden="true">LC</span>
-                <span>Learning Center</span>
-            </a>
-            <nav class="directory-nav" aria-label="Teacher navigation">
-                <a class="text-button" href="teacher.html">Dashboard</a>
-                <a class="text-button" href="students.html">Student directory</a>
-                <button id="sessions-signout" class="text-button" type="button">Sign out</button>
-            </nav>
-        </header>
-
-        <section class="sessions-heading" aria-labelledby="sessions-title">
-            <div>
-                <p class="eyebrow">TEACHING PLAN</p>
-                <h1 id="sessions-title">Sessions</h1>
-                <p>Create and activate sessions, then record attendance across your devices.</p>
-            </div>
-            <a class="submit-button sessions-scan-link" href="attendance.html">Scan attendance <span aria-hidden="true">&#8594;</span></a>
-        </section>
-
-        <p id="sessions-message" class="form-message" role="status" aria-live="polite" hidden></p>
-
-        <section class="sessions-create" aria-labelledby="create-session-title">
-            <div class="sessions-section-heading">
-                <div>
-                    <p class="eyebrow">NEW SESSION</p>
-                    <h2 id="create-session-title">Plan a session</h2>
-                </div>
-                <p class="sessions-hint">Suggestions follow the latest session. Edit them whenever needed.</p>
-            </div>
-            <form id="create-session-form" class="sessions-form">
-                <label for="session-sequence">Session sequence / topic</label>
-                <input id="session-sequence" name="sequence" maxlength="160" placeholder="e.g. Fractions: equivalent values" required>
-                <div class="sessions-number-fields">
-                    <div>
-                        <label for="session-week">Week number</label>
-                        <input id="session-week" name="week" type="number" min="1" max="60" required>
-                    </div>
-                    <div>
-                        <label for="session-number">Session number</label>
-                        <input id="session-number" name="number" type="number" min="1" max="999" required>
-                    </div>
-                </div>
-                <button class="submit-button" type="submit">Create session <span aria-hidden="true">&#8594;</span></button>
-            </form>
-        </section>
-
-        <section class="sessions-list-section" aria-labelledby="session-list-title">
-            <div class="sessions-section-heading">
-                <div>
-                    <p class="eyebrow">TEACHER ACCOUNT</p>
-                    <h2 id="session-list-title">Created sessions</h2>
-                </div>
-                <span id="session-count" class="sessions-count">0 sessions</span>
-            </div>
-            <div id="sessions-list" class="sessions-list" aria-live="polite"></div>
-        </section>
-    </main>
-
-    <dialog id="attendance-dialog" class="sessions-dialog" aria-labelledby="attendance-dialog-title">
-        <div class="sessions-dialog-header">
-            <div>
-                <p class="eyebrow">SESSION ATTENDANCE</p>
-                <h2 id="attendance-dialog-title">Attendance</h2>
-            </div>
-            <button id="close-attendance-dialog" class="text-button" type="button" aria-label="Close attendance">Close</button>
-        </div>
-        <div class="attendance-summary">
-            <span><strong id="present-count">0</strong> present</span>
-            <span><strong id="absent-count">0</strong> absent</span>
-        </div>
-        <div class="attendance-columns">
-            <section aria-labelledby="present-title">
-                <h3 id="present-title">Present</h3>
-                <ul id="present-list" class="attendance-student-list"></ul>
-            </section>
-            <section aria-labelledby="absent-title">
-                <h3 id="absent-title">Absent</h3>
-                <ul id="absent-list" class="attendance-student-list"></ul>
-            </section>
-        </div>
-        <section id="attendance-student-detail" class="attendance-detail" aria-live="polite" hidden></section>
-    </dialog>
-
-    <dialog id="student-detail-dialog" class="sessions-dialog" aria-labelledby="student-detail-title">
-        <div class="sessions-dialog-header">
-            <div>
-                <p class="eyebrow">STUDENT RECORD</p>
-                <h2 id="student-detail-title">Student details</h2>
-            </div>
-            <button id="close-student-detail" class="text-button" type="button" aria-label="Close student details">Close</button>
-        </div>
-        <dl id="student-detail-fields" class="session-student-fields"></dl>
-    </dialog>
+    <p>This page moved. <a href="app.html#/sessions">Continue</a>.</p>
 </body>
 </html>

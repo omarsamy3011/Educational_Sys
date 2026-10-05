@@ -15,7 +15,7 @@
             <nav class="home-nav" aria-label="Main navigation">
                 <a href="#home">Home</a>
                 <a href="#portals">Portals</a>
-                <a href="teacherlogin.html">For teachers</a>
+                <a href="login.html?role=teacher">For teachers</a>
             </nav>
             <a class="header-cta" href="#portals">Get started <span aria-hidden="true">&#8594;</span></a>
         </header>
@@ -45,21 +45,24 @@
         <section class="portal-section" id="portals" aria-labelledby="portal-title">
             <div class="portal-heading">
                 <div><p class="portal-kicker">START WHERE YOU ARE</p><h2 id="portal-title">Choose your portal</h2></div>
-                <p>Pick the account that fits you. You can register or sign in on the next page.</p>
+                <p>Pick the account that fits you. You can register, sign in, or try a demo on the next page.</p>
             </div>
             <div class="portal-grid" aria-label="Available account types">
-                <a class="portal-card" href="studentlogin.html">
-                    <span class="portal-number">01</span><span class="portal-card-title">Student</span><span class="portal-card-copy">Continue your learning journey.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                <a class="portal-card" href="login.html?role=student">
+                    <span class="portal-number">01</span><span class="portal-card-title">Student</span><span class="portal-card-copy">One account for all your teachers.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
                 </a>
-                <a class="portal-card" href="teacherlogin.html">
-                    <span class="portal-number">02</span><span class="portal-card-title">Teacher</span><span class="portal-card-copy">Share your knowledge and guide learners.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                <a class="portal-card" href="login.html?role=teacher">
+                    <span class="portal-number">02</span><span class="portal-card-title">Teacher</span><span class="portal-card-copy">Run your classes, students and team.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
                 </a>
-                <a class="portal-card" href="centerlogin.html">
-                    <span class="portal-number">03</span><span class="portal-card-title">Learning center</span><span class="portal-card-copy">Bring your learning community together.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                <a class="portal-card" href="login.html?role=assistant">
+                    <span class="portal-number">03</span><span class="portal-card-title">Assistant</span><span class="portal-card-copy">Help your teacher at the door and on the phone.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
                 </a>
-                <div class="portal-card portal-card-muted" aria-disabled="true">
-                    <span class="portal-number">04</span><span class="portal-card-title">Parent</span><span class="portal-card-copy">A dedicated family portal is coming soon.</span><span class="coming-soon">Coming soon</span>
-                </div>
+                <a class="portal-card" href="login.html?role=center">
+                    <span class="portal-number">04</span><span class="portal-card-title">Learning center</span><span class="portal-card-copy">See the teachers and sessions at your place.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="portal-card" href="login.html?role=parent">
+                    <span class="portal-number">05</span><span class="portal-card-title">Parent</span><span class="portal-card-copy">Follow your child's progress with every teacher.</span><span class="portal-arrow" aria-hidden="true">&#8599;</span>
+                </a>
             </div>
         </section>
     </main>
