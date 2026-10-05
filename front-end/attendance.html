@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan attendance | Learning Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="sessions.css">
+    <script src="attendance.js" defer></script>
+</head>
+<body>
+    <main class="page-shell attendance-shell">
+        <header class="teacher-header">
+            <a class="brand" href="index.html">
+                <span class="brand-mark" aria-hidden="true">LC</span>
+                <span>Learning Center</span>
+            </a>
+            <nav class="directory-nav" aria-label="Teacher navigation">
+                <a class="text-button" href="teacher.html">Dashboard</a>
+                <a class="text-button" href="sessions.html">Sessions</a>
+                <button id="attendance-signout" class="text-button" type="button">Sign out</button>
+            </nav>
+        </header>
+
+        <section class="sessions-heading attendance-page-heading" aria-labelledby="attendance-page-title">
+            <div>
+                <p class="eyebrow">LIVE CLASSROOM</p>
+                <h1 id="attendance-page-title">Scan attendance</h1>
+                <p id="active-session-label">Checking for an active session on this device...</p>
+            </div>
+            <span id="active-session-badge" class="session-state-badge">Checking</span>
+        </section>
+
+        <p id="attendance-message" class="form-message" role="status" aria-live="polite" hidden></p>
+
+        <section class="attendance-workspace" aria-labelledby="student-lookup-title">
+            <div class="attendance-instructions">
+                <p class="eyebrow">STUDENT CHECK-IN</p>
+                <h2 id="student-lookup-title">Identify the student</h2>
+                <p>Scan the student QR code or enter their student ID. Review their details before confirming attendance.</p>
+            </div>
+            <div class="attendance-lookup">
+                <button id="start-scan" class="secondary-button" type="button">Open camera scanner</button>
+                <div class="manual-id-form">
+                    <label for="student-id-input">Student ID</label>
+                    <form id="student-id-form">
+                        <input id="student-id-input" name="studentId" autocomplete="off" placeholder="Enter student ID" required>
+                        <button class="submit-button" type="submit">Find student <span aria-hidden="true">&#8594;</span></button>
+                    </form>
+                </div>
+            </div>
+            <div id="camera-panel" class="camera-panel" hidden>
+                <video id="camera-video" playsinline muted aria-label="QR code camera preview"></video>
+                <p id="camera-status" class="teacher-subtext" role="status" aria-live="polite">Starting camera...</p>
+                <button id="stop-scan" class="text-button" type="button">Close camera</button>
+            </div>
+        </section>
+
+        <section id="student-review" class="student-review" aria-labelledby="review-title" hidden>
+            <div class="sessions-section-heading">
+                <div>
+                    <p class="eyebrow">CHECK BEFORE SUBMITTING</p>
+                    <h2 id="review-title">Student details</h2>
+                </div>
+                <span id="review-student-id" class="student-id-label"></span>
+            </div>
+            <dl id="review-student-fields" class="session-student-fields"></dl>
+            <div class="review-actions">
+                <button id="cancel-review" class="secondary-button" type="button">Cancel</button>
+                <button id="confirm-attendance" class="submit-button" type="button">Confirm attendance <span aria-hidden="true">&#8594;</span></button>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
