@@ -77,13 +77,17 @@ const assistantSchema = new mongoose_1.default.Schema({
         enum: user_enum_1.assistantTypeEnum,
         default: user_enum_1.assistantTypeEnum.Assistant
     },
+    permissions: {
+        type: [String],
+        default: []
+    },
     teacher: {
         type: mongoose_1.Types.ObjectId,
         ref: 'Teacher'
     },
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     }
 }, {
     timestamps: true,

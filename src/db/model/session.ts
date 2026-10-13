@@ -14,11 +14,28 @@ const sessionAttendanceSchema = new mongoose.Schema({
     }
 }, { _id: false })
 
+const sessionClosingSchema = new mongoose.Schema({
+    normalCost: { type: Number, min: 0, required: true },
+    reducedCost: { type: Number, min: 0, required: true },
+    reducedCount: { type: Number, min: 0, required: true },
+    notes: { type: String, maxlength: 1000, default: "" }
+}, { _id: false })
+
 const sessionSchema = new mongoose.Schema<ISession>({
     teacher: {
         type: Types.ObjectId,
         ref: "Teacher",
         required: true
+    },
+    center: {
+        type: Types.ObjectId,
+        ref: "Center",
+        default: null
+    },
+    schedule: {
+        type: Types.ObjectId,
+        ref: "Schedule",
+        default: null
     },
     sequence: {
         type: String,
@@ -43,6 +60,16 @@ const sessionSchema = new mongoose.Schema<ISession>({
         default: false,
         required: true
     },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    status: {
+        type: String,
+        enum: ["normal", "cancelled"],
+        default: "normal"
+    },
+    closing: { type: sessionClosingSchema, default: undefined },
     attendance: {
         type: [sessionAttendanceSchema],
         default: []

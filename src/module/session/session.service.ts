@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "../../common/exceptions/error.exceptions"
+import { BadRequestError, ConflictError, NotFoundError } from "../../common/exceptions/error.exceptions"
 import { ISession, ISessionAttendance } from "../../common/interface/session"
 import { IStudent } from "../../common/interface/stud"
 import { ITeacher } from "../../common/interface/teacher"
@@ -9,6 +9,7 @@ import { DatabaseReposatory } from "../../db/repository/db.repo"
 import { Types } from "mongoose"
 
 type NewSession = Pick<ISession, "sequence" | "week" | "number">
+type SessionClosing = NonNullable<ISession["closing"]>
 
 class SessionService {
     private sessionRepository: DatabaseReposatory<ISession>
@@ -184,6 +185,20 @@ class SessionService {
             }),
             student
         }
+    }
+
+    async saveClosing(teacherId: string, sessionId: string, closing: SessionClosing) {
+        const session = await this.sessionRepository.findone({
+            filter: { _id: sessionId, teacher: teacherId }
+        })
+        if (!session) throw new NotFoundError("Session not found")
+        if (session.status === "cancelled") throw new BadRequestError("Cannot save a closing for a cancelled session")
+        const updated = await this.sessionRepository.findByIdAndUpdate({
+            id: sessionId,
+            data: { $set: { closing } }
+        })
+        if (!updated) throw new NotFoundError("Session not found")
+        return updated
     }
 }
 

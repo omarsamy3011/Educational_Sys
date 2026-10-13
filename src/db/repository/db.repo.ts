@@ -66,11 +66,24 @@ export class DatabaseReposatory<TRawDoc> {
         return query
     }
 
-    updateone({filter,data}:{
+    updateone({filter,data,select,populate,lean}:{
         filter:any,
-        data:any
+        data:any,
+        select?:string,
+        populate?:string| PopulateOptions |PopulateOptions[],
+        lean?:boolean
     }){
-        return this.model.updateOne({filter,data},{returnDocument:"after"})
+        let query:any =  this.model.updateOne({filter,data},{returnDocument:"after"})
+        if(select){
+            query = query.select(select)
+        }
+        if(populate){
+            query = query.populate(populate)
+        }
+        if(lean){
+            query = query.lean(lean)
+        }
+        return query
     }
 
     findByIdAndUpdate({id,data,select,populate,lean}:{

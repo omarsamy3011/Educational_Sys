@@ -75,7 +75,8 @@ const teacherSchema = new mongoose_1.default.Schema({
     },
     companyName: {
         type: String,
-        unique: true
+        unique: true,
+        sparse: true
     },
     subject: {
         type: [String],
@@ -87,7 +88,7 @@ const teacherSchema = new mongoose_1.default.Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     },
     students: [{
             type: mongoose_1.Types.ObjectId,

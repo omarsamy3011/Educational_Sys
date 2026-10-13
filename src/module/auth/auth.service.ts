@@ -37,6 +37,91 @@ class AuthService {
         this.tokenService = new TokenService()
     }
 
+    private async sendOtpEmail({ email, otp, purpose }:{ email:string, otp:string, purpose:'verify'|'reset-password' }) {
+        const title = purpose === 'verify' ? 'Verify Your Account' : 'Reset Your Password'
+        const message = purpose === 'verify'
+            ? 'Please use the one-time verification code below to complete your account setup.'
+            : 'Please use the one-time code below to reset your password.'
+
+        await sendEmail({
+            to: email,
+            subject: title,
+            html: `<!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f6f8; padding: 40px 10px;">
+        <tr>
+        <td align="center">
+            <table role="presentation" width="100%" style="max-width: 500px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); padding: 30px;">
+            <tr>
+                <td align="center" style="padding-bottom: 20px;">
+                <h2 style="margin: 0; color: #1a1a1a; font-size: 24px; font-weight: 700;">${title}</h2>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="color: #555555; font-size: 15px; line-height: 1.5; padding-bottom: 25px;">
+                ${message} This code is valid for <strong>5 minutes</strong>.
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="padding-bottom: 25px;">
+                <div style="display: inline-block; background-color: #f0f4ff; border: 1px dashed #4f46e5; border-radius: 8px; padding: 15px 35px;">
+                    <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #4f46e5;">${otp}</span>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="color: #888888; font-size: 13px; line-height: 1.4;">
+                If you didn't request this code, you can safely ignore this email.
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top: 25px; border-bottom: 1px solid #eeeeee;"></td>
+            </tr>
+            <tr>
+                <td align="center" style="padding-top: 20px; color: #aaaaaa; font-size: 12px;">
+                &copy; 2026 EduVerse Academy. All rights reserved.
+                </td>
+            </tr>
+            </table>
+        </td>
+        </tr>
+    </table>
+    </body>
+    </html>`
+        })
+    }
+
+    private async sendTeacherOtp({ identifier, purpose }:{ identifier:string, purpose:'verify'|'reset-password' }) {
+        const teacherData = await this.teacherRepository.findone({
+            filter: {
+                $or: [{ email: identifier }, { phone: identifier }, { userName: identifier }],
+            }
+        })
+
+        if (!teacherData) {
+            throw new NotFoundError('Teacher account not found')
+        }
+        if (!teacherData.email) {
+            throw new BadRequestError('Teacher email not available for OTP delivery')
+        }
+
+        const otp = crypto.randomInt(100000, 1000000).toString()
+        await this.sendOtpEmail({ email: teacherData.email, otp, purpose })
+        await redisService.set({
+            key: `otp::${purpose}::${teacherData.email}`,
+            value: `${await genertateHash({ plainText: otp })}`,
+            ttl: 60 * 5
+        })
+
+        return { email: teacherData.email, status: 'otp_sent' }
+    }
+
     async teacherSignup(data:ITeacher,file:Express.Multer.File){
         let existingTeacher = await this.teacherRepository.findone({filter:{
         $or: [
@@ -47,7 +132,7 @@ class AuthService {
         ],
     }})
         if(existingTeacher){
-            if (existingTeacher.email === email) throw new BadRequestError('Email already registered');
+            if (existingTeacher.email === data.email) throw new BadRequestError('Email already registered');
             if (existingTeacher.phone === data.phone) throw new BadRequestError('Phone number already registered');
             if (existingTeacher.userName === data.userName) throw new BadRequestError('Username already taken');
             if (data.companyName && existingTeacher.companyName === data.companyName)throw new BadRequestError('Company name already taken')
@@ -130,7 +215,7 @@ class AuthService {
         } catch (error) {
             throw new BadRequestError('No Email Sent Try Again !!')
         }
-        redisService.set({key:`otp::${data.email}`,value:`${await genertateHash({plainText:otp})}`,ttl:60*5})
+        redisService.set({key:`otp::verify::${data.email}`,value:`${await genertateHash({plainText:otp})}`,ttl:60*5})
         return await this.teacherRepository.create(data)
     }
     async studentSignup(data:IStudent,file:Express.Multer.File){
@@ -183,7 +268,7 @@ class AuthService {
             if(!teacherData.confirmEmail) throw new BadRequestError('Email Is Not Verified')
             let isMatched = await compareHash({plainText:password,cypherText:teacherData.password})
             if(isMatched){
-                return this.tokenService.generateToken(teacherData)
+                return this.tokenService.generateToken({ ...teacherData.toObject(), role: 'teacher' })
             }else{
                 throw new BadRequestError('password invalid')
             }
@@ -200,7 +285,7 @@ class AuthService {
             //if(!studentData.confirmAccount) throw new BadRequestError('Email Is Not Verified')
             let isMatched = await compareHash({plainText:password,cypherText:studentData.password})
             if(isMatched){
-                return this.tokenService.generateToken(studentData)
+                return this.tokenService.generateToken({ ...studentData.toObject(), role: 'student' })
             }else{
                 throw new BadRequestError('password invalid')
             }
@@ -216,7 +301,7 @@ class AuthService {
         if(centerData){
             let isMatched = await compareHash({plainText:password,cypherText:centerData.password})
             if(isMatched){
-                return this.tokenService.generateToken(centerData)
+                return this.tokenService.generateToken({ ...centerData.toObject(), role: 'center' })
             }else{
                 throw new BadRequestError('password invalid')
             }
@@ -238,19 +323,77 @@ class AuthService {
         let teacherData = await this.teacherRepository.findone({filter:{
         $or: [{ email: identifier }, { phone: identifier }, { userName: identifier }],
     }})
+        if(!teacherData){
+            throw new NotFoundError('Teacher account not found')
+        }
         if(teacherData.confirmEmail){
             throw new BadRequestError('teacher is already verified')
         }
-        let hashedotp = await redisService.get({key:`otp::${teacherData.email}`})
+        if (!teacherData.email) {
+            throw new BadRequestError('Teacher email not available for verification')
+        }
+        let hashedotp = await redisService.get({key:`otp::verify::${teacherData.email}`})
         if(!hashedotp){
             throw new BadRequestError('OTP Expired , Click To Resend')
         }
         let matchedotp = await compareHash({plainText:data.otp,cypherText:hashedotp as string})
         if(matchedotp){
-            return await this.teacherRepository.updateone({filter:{email:teacherData.email},data:{confirmEmail:true}})
+            return await this.teacherRepository.findByIdAndUpdate({
+                id: String(teacherData._id),
+                data: { $set: { confirmEmail: true } }
+            })
         }else{
             throw new BadRequestError('OTP is not correct')
         }
+    }
+
+    async resendOtp(data: { identifier: string, purpose?: 'verify' | 'reset-password' }) {
+        const purpose = data.purpose || 'verify'
+        if (!data.identifier) {
+            throw new BadRequestError('Identifier is required')
+        }
+        return await this.sendTeacherOtp({ identifier: data.identifier, purpose })
+    }
+
+    async forgotPassword(data: { identifier: string, purpose?: 'verify' | 'reset-password' }) {
+        if (!data.identifier) {
+            throw new BadRequestError('Identifier is required')
+        }
+        return await this.sendTeacherOtp({ identifier: data.identifier, purpose: data.purpose || 'reset-password' })
+    }
+
+    async resetPassword(data: { identifier: string, otp: string, password: string }) {
+        const identifier = data.identifier
+        const teacherData = await this.teacherRepository.findone({
+            filter: {
+                $or: [{ email: identifier }, { phone: identifier }, { userName: identifier }],
+            }
+        })
+
+        if (!teacherData) {
+            throw new NotFoundError('Teacher account not found')
+        }
+        if (!teacherData.email) {
+            throw new BadRequestError('Teacher email not available for password reset')
+        }
+
+        const hashedotp = await redisService.get({ key: `otp::reset-password::${teacherData.email}` })
+        if (!hashedotp) {
+            throw new BadRequestError('OTP Expired , Click To Resend')
+        }
+
+        const matchedotp = await compareHash({ plainText: data.otp, cypherText: hashedotp as string })
+        if (!matchedotp) {
+            throw new BadRequestError('OTP is not correct')
+        }
+
+        const hashedPassword = await genertateHash({ plainText: data.password })
+        await this.teacherRepository.findByIdAndUpdate({
+            id: String(teacherData._id),
+            data: { $set: { password: hashedPassword } }
+        })
+
+        return { message: 'Password reset successfully' }
     }
 }
 

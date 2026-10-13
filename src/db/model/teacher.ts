@@ -42,7 +42,8 @@ const teacherSchema = new mongoose.Schema<ITeacher>({
     },
     companyName:{
         type:String,
-        unique:true
+        unique:true,
+        sparse:true
     },
     subject:{
         type:[String],
@@ -54,7 +55,7 @@ const teacherSchema = new mongoose.Schema<ITeacher>({
     },
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     },
     students:[{
         type:Types.ObjectId,

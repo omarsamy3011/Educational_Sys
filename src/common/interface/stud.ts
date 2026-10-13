@@ -17,5 +17,8 @@ export interface IStudent {
     schoolName:string,
     learningLanguage:string,
     balance:number,
+    pricePerSession?:number,
+    isBlocked?:boolean,
+    center?:Types.ObjectId,
     createdAt:Date
 }

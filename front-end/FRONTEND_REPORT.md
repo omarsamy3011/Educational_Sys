@@ -129,9 +129,9 @@ Full request bodies and response objects are in `api.js` (calls) and `mock/serve
 ### Public directory (any signed-in user)
 | | Method & path | Returns | P |
 |---|---|---|---|
-| 🆕 | `GET /teachers/search?q&subject` | public teacher fields + `studentsCount`, `centers: [names]` | P1 |
+| ✏️ | `GET /teachers/search?q` | implemented public teacher fields for the center invitation directory; broader directory enrichments remain | P1 |
 | 🆕 | `GET /teachers/:id` | + `centers: [Center]`, `schedule: [Slot]` | P2 |
-| 🆕 | `GET /centers/search?q` | `[Center]` | P2 |
+| ✅ | `GET /centers/search?q` | public center contact/location fields | P2 |
 
 ### Teacher (and assistants with permission)
 **Profile & dashboard**
@@ -169,12 +169,12 @@ Full request bodies and response objects are in `api.js` (calls) and `mock/serve
 | 🆕 | `PATCH /teacher/sessions/:id/attendance/:studentId` `{ payment?, comment?, homeworkStatus? }` | changing `payment` adjusts the balance | P1 |
 | 🆕 | `DELETE /teacher/sessions/:id/attendance/:studentId` | refund `charged` | P2 |
 | 🆕 | `POST /teacher/sessions/:id/homework` `{ identifier, status }` | status ∈ `complete, incomplete, no_steps, not_done` | P1 |
-| 🆕 | `PUT /teacher/sessions/:id/closing` `{ normalCost, reducedCost, reducedCount, notes }` | P2 |
+| ✅ | `PUT /teacher/sessions/:id/closing` `{ normalCost, reducedCost, reducedCount, notes }` | P2 |
 | 🆕 | `POST /teacher/sessions/:id/staff` `{ assistant, checkIn? }` · `PATCH …/staff/:entryId` `{ checkOut?, checkIn?, notes? }` · `DELETE …/staff/:entryId` | P3 |
 | 🆕 | `GET /teacher/scan/lookup?identifier=` → `{ student, activeSession, attended, attendance, price, allowed, reasons[], warnings[], booklets[] (undelivered orders), lastSessions[] }` | P1 |
 
 **Schedule** — `Slot = { _id, dayOfWeek (0=Sun), startTime "HH:MM", durationMinutes, center, centerName, grade, title, isActive, notes, teacher{…} }`
-| 🆕 | `GET/POST /teacher/schedule` · `PATCH/DELETE /teacher/schedule/:id` · `POST /teacher/schedule/:id/start` `{ sequence }` → creates and activates today's session | P2 |
+| ✅ | `GET/POST /teacher/schedule` · `PATCH/DELETE /teacher/schedule/:id` · `POST /teacher/schedule/:id/start` `{ sequence }` → creates and activates today's session | P2 |
 |---|---|---|
 
 **Teaching content**
@@ -202,7 +202,7 @@ Full request bodies and response objects are in `api.js` (calls) and `mock/serve
 | 🆕 | `POST /teacher/follow-up/comments` `{ student, session, comment }` · `PUT /teacher/follow-up/assign` `{ assistant\|null, students[] }` | P2 |
 | 🆕 | `GET /teacher/leaderboard` → `[{ rank, student, points, centerName }]` | P3 |
 | ✏️ | `GET /teacher/assistants` (fix bug) · ✅ `POST /teacher/assistants` · 🆕 `PATCH /teacher/assistants/:id` `{ firstName, lastName, phone, role, permissions[], salary{type: fixed\|hourly\|per_session, amount} }` · 🆕 `DELETE /teacher/assistants/:id` · 🆕 `GET /teacher/assistants/:id/stats` | P1 |
-| 🆕 | `GET /teacher/centers` → `[{ center, status, requestedBy }]`, `POST /teacher/centers/:centerId/request`, `PATCH /teacher/centers/:centerId` `{ status }` (answer a center's invitation), `DELETE /teacher/centers/:centerId` | P2 |
+| ✅ | `GET /teacher/centers` → `[{ center, status, requestedBy }]`, `POST /teacher/centers/:centerId/request`, `PATCH /teacher/centers/:centerId` `{ status }` (answer a center's invitation), `DELETE /teacher/centers/:centerId` | P2 |
 
 ### Assistant (own account)
 | 🆕 | `POST /login/assistant` · `GET /assistant/profile` → assistant fields + `role`, `permissions[]`, `teacher{public fields}` · `PATCH /assistant/profile` · `GET /assistant/work-log` | P1 |
@@ -211,10 +211,10 @@ Full request bodies and response objects are in `api.js` (calls) and `mock/serve
 ### Learning center
 | | Method & path | P |
 |---|---|---|
-| 🆕 | `GET/PATCH /center/profile` | P1 |
-| 🆕 | `GET /center/dashboard` | P2 |
-| 🆕 | `GET /center/teachers` → `[{ teacher, status, requestedBy, studentsCount, sessionsCount, attendanceCount, lastSessionAt, slots[] }]` · `POST /center/teachers/invite` `{ identifier }` · `PATCH /center/teachers/:teacherId` `{ status }` · `DELETE /center/teachers/:teacherId` | P1 |
-| 🆕 | `GET /center/schedule` (active slots of linked teachers at this center) · `GET /center/sessions?from&to` (sessions at this center with `teacher, presentCount, closing`) | P2 |
+| ✅ | `GET/PATCH /center/profile` · `PATCH /center/password` | P1 |
+| ✅ | `GET /center/dashboard` → `counts, closingsDue, today, activeSessions, byTeacher, recentSessions` | P2 |
+| ✅ | `GET /center/teachers` → `[{ teacher, status, requestedBy, studentsCount, sessionsCount, attendanceCount, lastSessionAt, slots[] }]` · `POST /center/teachers/invite` `{ identifier }` · `PATCH /center/teachers/:teacherId` `{ status }` · `DELETE /center/teachers/:teacherId` | P1 |
+| ✅ | `GET /center/schedule` (active slots of linked teachers at this center) · `GET /center/sessions?from&to` (sessions at this center with `teacher, presentCount, closing`) | P2 |
 
 ### Student
 All teacher-scoped routes must verify an **active** enrollment (else 403).
@@ -286,8 +286,8 @@ All teacher-scoped routes must verify an **active** enrollment (else 403).
 
 1. Role in JWT + `requireRole` + assistant middleware, 401s, the §4 bug fixes.
 2. Enrollment + CenterLink models. Migrate `teacher.students` → enrollments.
-3. P1 endpoints: login assistant · uploads · students CRUD/link/history/balance · requests · sessions (single/edit/cancel/attendance extras/homework) · scan lookup · exams · assistants · center teachers/profile · student profile/teachers/overview/sessions/exams · directory.
-4. P2: schedule, lessons, homework, booklets, wallet, follow-up, parent, closings.
+3. P1 endpoints: login assistant · uploads · students CRUD/link/history/balance · requests · sessions (single/edit/cancel/attendance extras/homework) · scan lookup · exams · assistants · student profile/teachers/overview/sessions/exams.
+4. P2: lessons, homework, booklets, wallet, follow-up, parent, broader directory support.
 5. P3: finance, expenses, leaderboard, announcements, archive, password reset.
 
 Tip: open the app with **Try the demo account** for each role, then run the same screen against your API. Any difference in behaviour shows what's still missing.

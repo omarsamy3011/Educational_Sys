@@ -52,4 +52,12 @@ router.post("/sessions/:sessionId/attendance", auth_middleware_1.auth, async (re
     const data = await session_service_1.default.markAttendance(getTeacherId(req), getSessionId(req), parsed.data.identifier);
     (0, successresponce_1.successResponce)({ res, message: "Attendance recorded successfully", status: 201, data });
 });
+router.put("/sessions/:sessionId/closing", auth_middleware_1.auth, async (req, res) => {
+    const parsed = session_validation_1.sessionClosingSchema.safeParse(req.body);
+    if (!parsed.success) {
+        throw new error_exceptions_1.BadRequestError("Invalid session closing", parsed.error.issues);
+    }
+    const data = await session_service_1.default.saveClosing(getTeacherId(req), getSessionId(req), parsed.data);
+    (0, successresponce_1.successResponce)({ res, message: "Session closing saved successfully", data });
+});
 exports.default = router;

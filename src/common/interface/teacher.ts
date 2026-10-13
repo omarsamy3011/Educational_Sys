@@ -11,6 +11,7 @@ export interface ITeacher {
     firstName?:string,
     lastName?:string,
     profilepic?:string| undefined,
+    bio?: string,
     confirmEmail?:boolean,
     gender?:string,
     provider?:string,

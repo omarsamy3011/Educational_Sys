@@ -115,8 +115,8 @@ export const api = {
     login: (role, body) => send("POST", `/login/${role}`, { body, auth: false }), // existing: teacher, student, center. new: assistant, parent
     verify: (body) => send("POST", "/verify-acc", { body, auth: false }), // existing (teacher email OTP)
     resendOtp: (body) => send("POST", "/resend-otp", { body, auth: false }),
-    forgotPassword: (role, body) => send("POST", `/forgot-password/${role}`, { body, auth: false }),
-    resetPassword: (role, body) => send("POST", `/reset-password/${role}`, { body, auth: false }),
+    forgotPassword: (role, body) => send("POST", "/forgot-password", { body, auth: false }),
+    resetPassword: (role, body) => send("POST", "/reset-password", { body, auth: false }),
   },
 
   // ---------- Shared ----------
@@ -127,7 +127,7 @@ export const api = {
   },
   directory: {
     teachers: (query) => get("/teachers/search", query), // public teacher directory: q, subject, grade
-    teacher: (teacherId) => get(`/teachers/${id(teacherId)}`),
+    teacher: (teacherId) => get(`/teacher/${id(teacherId)}`),
     centers: (query) => get("/centers/search", query),
   },
   changePassword: (role, body) => patch(`/${role}/password`, body),

@@ -13,8 +13,8 @@ var providerEnum;
 })(providerEnum || (exports.providerEnum = providerEnum = {}));
 var assistantTypeEnum;
 (function (assistantTypeEnum) {
-    assistantTypeEnum[assistantTypeEnum["Admin"] = 0] = "Admin";
-    assistantTypeEnum[assistantTypeEnum["Assistant"] = 1] = "Assistant";
+    assistantTypeEnum["Admin"] = "Admin";
+    assistantTypeEnum["Assistant"] = "Assistant";
 })(assistantTypeEnum || (exports.assistantTypeEnum = assistantTypeEnum = {}));
 var gradeEnum;
 (function (gradeEnum) {

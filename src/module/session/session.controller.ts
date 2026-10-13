@@ -7,6 +7,7 @@ import sessionService from "./session.service"
 import {
     createSessionSchema,
     markAttendanceSchema,
+    sessionClosingSchema,
     setSessionActiveSchema
 } from "./session.validation"
 
@@ -65,6 +66,19 @@ router.post("/sessions/:sessionId/attendance", auth, async (req: userRequest, re
         parsed.data.identifier
     )
     successResponce({ res, message: "Attendance recorded successfully", status: 201, data })
+})
+
+router.put("/sessions/:sessionId/closing", auth, async (req: userRequest, res: Response) => {
+    const parsed = sessionClosingSchema.safeParse(req.body)
+    if (!parsed.success) {
+        throw new BadRequestError("Invalid session closing", parsed.error.issues)
+    }
+    const data = await sessionService.saveClosing(
+        getTeacherId(req),
+        getSessionId(req),
+        parsed.data
+    )
+    successResponce({ res, message: "Session closing saved successfully", data })
 })
 
 export default router

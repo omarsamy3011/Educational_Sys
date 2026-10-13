@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markAttendanceSchema = exports.setSessionActiveSchema = exports.createSessionSchema = void 0;
+exports.sessionClosingSchema = exports.markAttendanceSchema = exports.setSessionActiveSchema = exports.createSessionSchema = void 0;
 const zod_1 = require("zod");
 exports.createSessionSchema = zod_1.z.object({
     sequence: zod_1.z.string().trim().min(1).max(160),
@@ -13,3 +13,9 @@ exports.setSessionActiveSchema = zod_1.z.object({
 exports.markAttendanceSchema = zod_1.z.object({
     identifier: zod_1.z.string().trim().min(1).max(80)
 });
+exports.sessionClosingSchema = zod_1.z.object({
+    normalCost: zod_1.z.number().min(0),
+    reducedCost: zod_1.z.number().min(0),
+    reducedCount: zod_1.z.number().int().min(0),
+    notes: zod_1.z.string().max(1000).optional()
+}).strict();

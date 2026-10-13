@@ -14,7 +14,8 @@ export interface IAssistant {
     gender?:genderEnum,
     provider?:providerEnum,
     teacher:Types.ObjectId,
-    role?:assistantTypeEnum,
+    role?:assistantTypeEnum | string,
+    permissions?: string[],
     createdAt:Date
 
 }

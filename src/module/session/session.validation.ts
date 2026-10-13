@@ -13,3 +13,10 @@ export const setSessionActiveSchema = z.object({
 export const markAttendanceSchema = z.object({
     identifier: z.string().trim().min(1).max(80)
 })
+
+export const sessionClosingSchema = z.object({
+    normalCost: z.number().min(0),
+    reducedCost: z.number().min(0),
+    reducedCount: z.number().int().min(0),
+    notes: z.string().max(1000).optional()
+}).strict()

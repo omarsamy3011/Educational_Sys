@@ -164,6 +164,22 @@ class SessionService {
             student
         };
     }
+    async saveClosing(teacherId, sessionId, closing) {
+        const session = await this.sessionRepository.findone({
+            filter: { _id: sessionId, teacher: teacherId }
+        });
+        if (!session)
+            throw new error_exceptions_1.NotFoundError("Session not found");
+        if (session.status === "cancelled")
+            throw new error_exceptions_1.BadRequestError("Cannot save a closing for a cancelled session");
+        const updated = await this.sessionRepository.findByIdAndUpdate({
+            id: sessionId,
+            data: { $set: { closing } }
+        });
+        if (!updated)
+            throw new error_exceptions_1.NotFoundError("Session not found");
+        return updated;
+    }
 }
 const sessionService = new SessionService();
 exports.default = sessionService;

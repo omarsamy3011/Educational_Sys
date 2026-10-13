@@ -2,11 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.globalErrorHandling = void 0;
 const globalErrorHandling = (err, req, res, next) => {
-    return res.status(err.status || 500).json({
-        message: err.message,
-        stack: err.stack,
-        cause: err.cause,
-        err
-    });
+    const isProduction = process.env.NODE_ENV === 'production';
+    const payload = {
+        message: err?.message ?? 'Internal server error'
+    };
+    if (err?.cause !== undefined && !isProduction) {
+        payload.cause = err.cause;
+    }
+    if (!isProduction && err?.stack) {
+        payload.stack = err.stack;
+    }
+    return res.status(err?.status || 500).json(payload);
 };
 exports.globalErrorHandling = globalErrorHandling;

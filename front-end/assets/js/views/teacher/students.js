@@ -258,7 +258,7 @@ export default async function students(ctx) {
     const { dialog, close } = openDialog({
       title: "Import students from a spreadsheet",
       size: "lg",
-      body: html`<p class="dialog-text">Upload a CSV file (Excel → Save as → CSV UTF-8). Columns: <span class="mono small">firstName, lastName, phone, parentPhone, grade (S1/S2/S3), schoolName, pricePerSession, balance</span>.</p>
+      body: html`<p class="dialog-text">Upload a CSV file (Excel → Save as → CSV UTF-8). Columns: <span class="mono small">firstName, lastName, phone, parentPhone, grade (S1/S2/S3), learningLanguage (Arabic/English), schoolName, pricePerSession, balance</span>. Grade and learning language are required.</p>
         <div class="row mb"><button class="btn btn-secondary btn-sm" type="button" data-template>${icon("download", 15)} Download template</button></div>
         <div class="field"><label for="csv-file">CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv"></div>
         <div id="import-preview" class="mt"></div>`,
@@ -268,8 +268,8 @@ export default async function students(ctx) {
     $("[data-template]", dialog).addEventListener("click", () =>
       downloadCSV(
         "students-template",
-        ["firstName", "lastName", "phone", "parentPhone", "grade", "schoolName", "pricePerSession", "balance"].map((key) => ({ label: key, value: (row) => row[key] })),
-        [{ firstName: "Mariam", lastName: "Hassan", phone: "01234567890", parentPhone: "01098765432", grade: "S3", schoolName: "El Orman School", pricePerSession: 80, balance: 0 }],
+        ["firstName", "lastName", "phone", "parentPhone", "grade", "learningLanguage", "schoolName", "pricePerSession", "balance"].map((key) => ({ label: key, value: (row) => row[key] })),
+        [{ firstName: "Mariam", lastName: "Hassan", phone: "01234567890", parentPhone: "01098765432", grade: "S3", learningLanguage: "Arabic", schoolName: "El Orman School", pricePerSession: 80, balance: 0 }],
       ),
     );
     $("#csv-file", dialog).addEventListener("change", async (event) => {
@@ -281,10 +281,10 @@ export default async function students(ctx) {
         pricePerSession: Number(row.pricePerSession) || 80,
         balance: Number(row.balance) || 0,
       }));
-      const invalid = rows.filter((row) => !row.firstName || !row.phone).length;
+      const invalid = rows.filter((row) => !row.firstName || !row.phone || !row.grade || !row.learningLanguage).length;
       mount(
         $("#import-preview", dialog),
-        html`<div class="notice ${invalid ? "notice-danger" : ""}">${plural(rows.length, "row")} found${invalid ? ` · ${invalid} missing a first name or phone (they'll be skipped)` : ""}.</div>
+        html`<div class="notice ${invalid ? "notice-danger" : ""}">${plural(rows.length, "row")} found${invalid ? ` · ${invalid} missing a first name, phone, grade or learning language (they'll be skipped)` : ""}.</div>
           ${table([{ label: "Name", render: (row) => `${row.firstName} ${row.lastName}` }, { label: "Phone", render: (row) => row.phone }, { label: "Grade", render: (row) => gradeLabel(row.grade) }], rows.slice(0, 6))}
           ${rows.length > 6 ? html`<p class="muted small">…and ${rows.length - 6} more</p>` : ""}`,
       );

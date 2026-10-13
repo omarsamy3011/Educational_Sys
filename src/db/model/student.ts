@@ -49,9 +49,22 @@ const studentSchema = new mongoose.Schema<IStudent>({
         type:Number,
         default:0
     },
+    pricePerSession:{
+        type:Number,
+        min:0,
+        default:0
+    },
+    isBlocked:{
+        type:Boolean,
+        default:false
+    },
+    center:{
+        type:Types.ObjectId,
+        ref:'Center'
+    },
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     }
 },{
     timestamps: true,

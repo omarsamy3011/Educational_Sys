@@ -24,7 +24,7 @@ const parentSchema = new mongoose.Schema<IParent>({
     }],
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     }
 },{
     timestamps: true,

@@ -44,13 +44,17 @@ const assistantSchema = new mongoose.Schema<IAssistant>({
         enum:assistantTypeEnum,
         default:assistantTypeEnum.Assistant
     },
+    permissions:{
+        type:[String],
+        default:[]
+    },
     teacher:{
         type:Types.ObjectId,
         ref:'Teacher'
     },
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     }
 },{
     timestamps: true,

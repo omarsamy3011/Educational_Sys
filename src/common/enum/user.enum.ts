@@ -7,7 +7,8 @@ export enum providerEnum {
     System,Gmail
 }
 export enum assistantTypeEnum {
-    Admin,Assistant
+    Admin = 'Admin',
+    Assistant = 'Assistant'
 }
 export enum gradeEnum {
     S1 , S2 , S3

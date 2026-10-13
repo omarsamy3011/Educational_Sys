@@ -57,7 +57,7 @@ const parentSchema = new mongoose_1.default.Schema({
         }],
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     }
 }, {
     timestamps: true,
