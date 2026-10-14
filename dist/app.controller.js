@@ -44,7 +44,7 @@ const bootstrap = async () => {
     });
     app.use(aurh_controller_1.default);
     app.use('/teacher', teacher_controller_1.default);
-    app.use('/teacher', session_controller_1.default);
+    app.use('/session', session_controller_1.default);
     app.use('/center', center_controller_1.default);
     app.use('/student', student_controller_1.default);
     redisService_1.redisService.connectRedis();

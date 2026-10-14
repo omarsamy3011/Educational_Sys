@@ -27,6 +27,14 @@ router.post('/teachers/:teacherId/request', auth,async (req: userRequest, res: R
     successResponce ({res, message:"Request sent successfully" , data})
 })
 
+router.get('/teachers/:teacherId/overview', auth,async (req: userRequest, res: Response) => {
+    const data = await studentservice.getTeacherOverview(req.user.id, req.params.teacherId as string)
+    successResponce ({res, message:"Teacher overview fetched successfully" , data})
+})
 
+router.get('/teachers/:sessionId/sessions',auth,async(req:userRequest,res:Response)=>{
+    const data = await studentservice.getTeacherSessions(req.user.id, req.params.sessionId as string)
+    successResponce ({res, message:"Teacher sessions fetched successfully" , data})
+})
 
 export default router

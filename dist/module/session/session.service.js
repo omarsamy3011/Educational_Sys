@@ -28,6 +28,7 @@ class SessionService {
         }
         return this.sessionRepository.create({
             ...data,
+            center: data.center ? new mongoose_1.Types.ObjectId(data.center) : null,
             teacher: new mongoose_1.Types.ObjectId(teacherId),
             active: false,
             attendance: []
@@ -52,6 +53,17 @@ class SessionService {
             right.number - left.number ||
             new Date(right.createdAt || 0).getTime() -
                 new Date(left.createdAt || 0).getTime());
+    }
+    async getCurrentSession(sessionID) {
+        return await this.sessionRepository.findById({
+            id: sessionID,
+            select: "-createdAt -__v",
+            populate: [{ path: 'teacher', select: '-password -__v -createdAt' },
+                { path: 'teacher.students', select: '-password -__v -createdAt' },
+                { path: 'center', select: '-__v -createdAt' },
+                { path: 'attendance.student', select: '-password -__v -createdAt' }
+            ]
+        });
     }
     async setSessionActive(teacherId, sessionId, active) {
         const session = await this.sessionRepository.findone({

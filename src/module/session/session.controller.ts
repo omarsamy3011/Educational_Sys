@@ -33,6 +33,11 @@ router.get("/sessions", auth, async (req: userRequest, res: Response) => {
     successResponce({ res, message: "Sessions retrieved successfully", data })
 })
 
+router.get("/sessions/:sessionId", auth, async (req: userRequest, res: Response) => {
+    const data = await sessionService.getCurrentSession(getSessionId(req))
+    successResponce({ res, message: "Session retrieved successfully", data })
+})
+
 router.post("/sessions", auth, async (req: userRequest, res: Response) => {
     const parsed = createSessionSchema.safeParse(req.body)
     if (!parsed.success) {

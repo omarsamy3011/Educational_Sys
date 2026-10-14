@@ -41,7 +41,7 @@ export const bootstrap = async() =>{
     })
     app.use(AuthRouter)
     app.use('/teacher',TeacherRouter)
-    app.use('/teacher',SessionRouter)
+    app.use('/session',SessionRouter)
     app.use('/center', centerRouter)
     app.use('/student', studentRouter)
     redisService.connectRedis()

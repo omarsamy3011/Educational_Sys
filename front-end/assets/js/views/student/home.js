@@ -40,8 +40,8 @@ export default async function studentHome(ctx) {
       ${statTile("Wallet", money(data.balance), { icon: icon("wallet", 15), tone: data.balance < 0 ? "danger" : "accent", hint: `${money(data.pricePerSession)} per session` })}
       ${statTile("Points", data.points, { icon: icon("trophy", 15), hint: data.rank ? `Rank ${data.rank} of ${data.classSize}` : "" })}
       ${statTile("Attendance", `${data.stats.attendanceRate}%`, { icon: icon("calendar", 15), hint: `${data.stats.present} sessions attended` })}
-      ${statTile("Homework done", `${data.stats.homeworkRate}%`, { icon: icon("pencil", 15) })}
-      ${statTile("Exam average", `${data.stats.examAvg}%`, { icon: icon("award", 15) })}
+      ${statTile("Homework done", data.stats.homeworkRate == null ? "—" : `${data.stats.homeworkRate}%`, { icon: icon("pencil", 15) })}
+      ${statTile("Exam average", data.stats.examAvg == null ? "—" : `${data.stats.examAvg}%`, { icon: icon("award", 15) })}
     </section>
     <div class="grid grid-main">
       <div class="stack">
@@ -56,7 +56,11 @@ export default async function studentHome(ctx) {
             : ""}
         </section>
         <section><h2 class="eyebrow" style="font-size:12px">From ${fullName(teacher)}</h2>
-          ${data.announcements.length ? html`<div class="tile-grid">${data.announcements.map((item) => announcementCard(item))}</div>` : html`<div class="card">${emptyState("No announcements")}</div>`}
+          ${data.announcements == null
+            ? html`<div class="card">${emptyState("Announcements aren't available yet")}</div>`
+            : data.announcements.length
+              ? html`<div class="tile-grid">${data.announcements.map((item) => announcementCard(item))}</div>`
+              : html`<div class="card">${emptyState("No announcements")}</div>`}
         </section>
       </div>
       <div class="stack">

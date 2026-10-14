@@ -8,7 +8,12 @@ import teacherModel from "../../db/model/teacher"
 import { DatabaseReposatory } from "../../db/repository/db.repo"
 import { Types } from "mongoose"
 
-type NewSession = Pick<ISession, "sequence" | "week" | "number">
+type NewSession = Pick<ISession, "sequence" | "week" | "number"> & {
+    center?: string | null | undefined
+    grade?: string | undefined
+    price?: number | null | undefined
+    date?: Date | undefined
+}
 type SessionClosing = NonNullable<ISession["closing"]>
 
 class SessionService {
@@ -30,9 +35,10 @@ class SessionService {
         if (!teacher) {
             throw new NotFoundError("Teacher account not found")
         }
-
+        
         return this.sessionRepository.create({
             ...data,
+            center: data.center ? new Types.ObjectId(data.center) : null,
             teacher: new Types.ObjectId(teacherId),
             active: false,
             attendance: []
@@ -49,7 +55,7 @@ class SessionService {
         }
 
         const sessions: ISession[] = await this.sessionRepository.findall({
-            filter: { teacher: teacherId },
+            filter: { teacher:teacherId},
             populate: {
                 path: "attendance.student",
                 select: "firstName lastName userID"
@@ -62,6 +68,18 @@ class SessionService {
                 new Date(right.createdAt || 0).getTime() -
                     new Date(left.createdAt || 0).getTime()
         )
+    }
+
+    async getCurrentSession(sessionID:string){
+        return await this.sessionRepository.findById({
+            id:sessionID,
+            select:"-createdAt -__v",
+            populate:[{path:'teacher',select:'-password -__v -createdAt'},
+                {path:'teacher.students',select:'-password -__v -createdAt'},
+                {path:'center',select:'-__v -createdAt'},
+                {path:'attendance.student' , select:'-password -__v -createdAt'}
+            ]
+        })
     }
 
     async setSessionActive(teacherId: string, sessionId: string, active: boolean) {

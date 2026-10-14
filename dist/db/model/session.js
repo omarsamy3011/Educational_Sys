@@ -86,6 +86,15 @@ const sessionSchema = new mongoose_1.default.Schema({
         min: 1,
         max: 999
     },
+    grade: {
+        type: String,
+        default: ""
+    },
+    price: {
+        type: Number,
+        min: 0,
+        default: null
+    },
     active: {
         type: Boolean,
         default: false,
@@ -109,10 +118,6 @@ const sessionSchema = new mongoose_1.default.Schema({
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
-});
-sessionSchema.index({ teacher: 1, active: 1 }, {
-    unique: true,
-    partialFilterExpression: { active: true }
 });
 const sessionModel = mongoose_1.default.model("Session", sessionSchema);
 exports.default = sessionModel;

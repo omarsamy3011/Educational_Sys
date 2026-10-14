@@ -28,6 +28,10 @@ router.get("/sessions", auth_middleware_1.auth, async (req, res) => {
     const data = await session_service_1.default.getSessions(getTeacherId(req));
     (0, successresponce_1.successResponce)({ res, message: "Sessions retrieved successfully", data });
 });
+router.get("/sessions/:sessionId", auth_middleware_1.auth, async (req, res) => {
+    const data = await session_service_1.default.getCurrentSession(getSessionId(req));
+    (0, successresponce_1.successResponce)({ res, message: "Session retrieved successfully", data });
+});
 router.post("/sessions", auth_middleware_1.auth, async (req, res) => {
     const parsed = session_validation_1.createSessionSchema.safeParse(req.body);
     if (!parsed.success) {

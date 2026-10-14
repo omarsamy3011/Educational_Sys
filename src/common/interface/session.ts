@@ -12,8 +12,10 @@ export interface ISession {
     sequence: string
     week: number
     number: number
+    grade?: string | undefined
+    price?: number | null | undefined
     active: boolean
-    date?: Date
+    date?: Date | undefined
     status?: "normal" | "cancelled"
     closing?: {
         normalCost: number

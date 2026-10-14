@@ -37,8 +37,6 @@ const requestSchema = new mongoose.Schema<IRequest>({
     timestamps: true
 });
 
-requestSchema.index({ teacher: 1, center: 1 }, { unique: true });
-
 const requestModel = mongoose.model<IRequest>("Request", requestSchema);
 
 export default requestModel;

@@ -159,26 +159,26 @@ export const api = {
     archive: () => get("/teacher/archive"),
     restoreStudent: (studentId) => post(`/teacher/archive/${id(studentId)}/restore`),
 
-    sessions: (query) => get("/teacher/sessions", query), // existing
+    sessions: (query) => get("/session/sessions", query), // existing
     session: (sessionId) =>
-      orFallback(() => get(`/teacher/sessions/${id(sessionId)}`), async () => (await shims()).sessionFromList(api.teacher, sessionId)),
-    createSession: (body) => post("/teacher/sessions", body), // existing (extra optional fields are new)
-    updateSession: (sessionId, body) => patch(`/teacher/sessions/${id(sessionId)}`, body),
-    deleteSession: (sessionId) => del(`/teacher/sessions/${id(sessionId)}`),
-    setSessionActive: (sessionId, active) => patch(`/teacher/sessions/${id(sessionId)}/active`, { active }), // existing
-    markAttendance: (sessionId, body) => post(`/teacher/sessions/${id(sessionId)}/attendance`, body), // existing ({identifier}); extra fields new
+      orFallback(() => get(`/session/sessions/${id(sessionId)}`), async () => (await shims()).sessionFromList(api.teacher, sessionId)),
+    createSession: (body) => post("/session/sessions", body), // existing (extra optional fields are new)
+    updateSession: (sessionId, body) => patch(`/session/sessions/${id(sessionId)}`, body),
+    deleteSession: (sessionId) => del(`/session/sessions/${id(sessionId)}`),
+    setSessionActive: (sessionId, active) => patch(`/session/sessions/${id(sessionId)}/active`, { active }), // existing
+    markAttendance: (sessionId, body) => post(`/session/sessions/${id(sessionId)}/attendance`, body), // existing ({identifier}); extra fields new
     updateAttendance: (sessionId, studentId, body) =>
-      patch(`/teacher/sessions/${id(sessionId)}/attendance/${id(studentId)}`, body),
+      patch(`/session/sessions/${id(sessionId)}/attendance/${id(studentId)}`, body),
     removeAttendance: (sessionId, studentId) =>
-      del(`/teacher/sessions/${id(sessionId)}/attendance/${id(studentId)}`),
-    checkHomework: (sessionId, body) => post(`/teacher/sessions/${id(sessionId)}/homework`, body),
-    saveClosing: (sessionId, body) => put(`/teacher/sessions/${id(sessionId)}/closing`, body),
-    staffCheckIn: (sessionId, body) => post(`/teacher/sessions/${id(sessionId)}/staff`, body),
+      del(`/session/sessions/${id(sessionId)}/attendance/${id(studentId)}`),
+    checkHomework: (sessionId, body) => post(`/session/sessions/${id(sessionId)}/homework`, body),
+    saveClosing: (sessionId, body) => put(`/session/sessions/${id(sessionId)}/closing`, body),
+    staffCheckIn: (sessionId, body) => post(`/session/sessions/${id(sessionId)}/staff`, body),
     staffUpdate: (sessionId, entryId, body) =>
-      patch(`/teacher/sessions/${id(sessionId)}/staff/${id(entryId)}`, body),
-    staffRemove: (sessionId, entryId) => del(`/teacher/sessions/${id(sessionId)}/staff/${id(entryId)}`),
+      patch(`/session/sessions/${id(sessionId)}/staff/${id(entryId)}`, body),
+    staffRemove: (sessionId, entryId) => del(`/session/sessions/${id(sessionId)}/staff/${id(entryId)}`),
     scanLookup: (identifier) =>
-      orFallback(() => get("/teacher/scan/lookup", { identifier }), async () => (await shims()).lookupFromLists(api.teacher, identifier)),
+      orFallback(() => get("/session/scan/lookup", { identifier }), async () => (await shims()).lookupFromLists(api.teacher, identifier)),
 
     schedule: () => get("/teacher/schedule"),
     createSlot: (body) => post("/teacher/schedule", body),
