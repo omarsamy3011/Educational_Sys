@@ -358,6 +358,537 @@ All `/student/teachers/:teacherId/...` routes must verify the authenticated stud
 3. Verify child linking using a verified phone/code process; do not let an unverified user claim any student by knowing a code.
 4. Build report queries from the child's enrollment and existing history collections, and test a parent attempting to request an unlinked child.
 
+## Exact frontend form and response contracts for missing/partial APIs
+
+This section refines the summary tables above using the actual form/view code. “Required” means the UI enforces it or requires it before submission; the backend must still validate every field. Response properties called **required by the view** are read directly by the UI, while optional properties are rendered conditionally or have a fallback.
+
+### Serialization rules used by the forms
+
+- `formDialog` converts `type: "number"` inputs to numbers; a blank number becomes `null`. Selects, dates, text, URLs, and textarea values are strings. Checkboxes are booleans; checkbox groups are arrays of strings.
+- A select with “No center” / “All grades” can serialize its empty choice as an empty string. Normalize that to `null` (center) or the agreed “all grades” representation at the API boundary; do not persist `""` accidentally.
+- Upload controls do not send file bytes in normal JSON requests. The view first uploads the file using `POST /uploads`, then sends the returned `url` in the feature request.
+- The API client unwraps the envelope, so views consume `data` directly. A form that refreshes a list may only require a successful result; a detail/editor screen often needs the saved entity returned immediately.
+
+### Teacher session and report forms
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST /session/sessions` create | Required `sequence: string`, `week: number`, `number: number`; optional `date: string` (`YYYY-MM-DD`), `center: string \| null`, `grade: string \| number \| null`, `price: number \| null`. The separate `activate` checkbox is **not** in the create body; after create, checked means a second `PATCH /session/sessions/:id/active` with `{ active: true }`. | Create must return `_id` so the follow-up activation works; list/detail render `sequence,week,number,date,centerName,grade,active,status,presentCount,attendance,collected`. |
+| `PATCH /session/sessions/:id` edit | Same fields as create, but optional. Cancel sends `{ status: "cancelled" }`; restore sends `{ status: "normal" }`. | Updated session/list item. |
+| `POST /session/sessions/:id/attendance` mark present | `{ identifier: string, force?: boolean }`; `identifier` is a student code or ID. `force: true` is retried only after the UI confirms an `INSUFFICIENT_BALANCE` or `BLOCKED` error. | Success triggers a reload; report rows use `attendance[]` with `student,markedAt,payment,charged,comment,homeworkStatus,markedBy,location`. Errors need a machine-readable `details.code` to enable the explicit force retry. |
+| `PATCH /session/sessions/:id/attendance/:studentId` edit row/homework | Payment editor sends `{ payment: number \| null, comment: string }`; homework selector sends `{ homeworkStatus: string \| null }`. Changing payment changes the balance as stated in the form. | Success triggers a report reload; retain all attendance row properties listed above. |
+| `POST /session/sessions/:id/homework` scan homework | `{ identifier: string, status: string }`; identifier is the student code (fallback student ID). Status is one of the configured `HOMEWORK_STATUS` keys other than `"submitted"`. | Success triggers the scan workflow to record the status and move to the next student. |
+| `GET /session/scan/lookup?identifier=...` | Query parameter `identifier` is the scanned code or entered identifier. | Scan result reads `student` and `allowed`; student fields include `userID,name,phone,parentPhone,balance,isBlocked`. This is currently called at `/session/scan/lookup`, so the backend mount must match that exact path (not only `/teacher/scan/lookup`). |
+| Session closing save | `{ normalCost: number, reducedCost: number \| null, reducedCount: number \| null, notes: string }`. | `closing: { normalCount,normalCost,reducedCount,reducedCost,total,notes }`; report displays all these values and calculates cash-after-center from `total`. |
+| Assistant check-in | `{ assistant: string, checkIn: string, notes: string }`; `checkIn` is a `datetime-local` string. Check-out sends `{ checkOut: ISO datetime string }`. | `staff[]` rows: `_id,assistant,checkIn,checkOut,minutes,notes`; assistant display requires name fields. |
+| `GET /session/sessions/:id` | No form body. | Report directly reads `week,number,sequence,date,centerName,grade,status,active,attendance[],staff[],closing`. Each attendance row needs `student` (name, code, phone, parentPhone, balance), `payment,charged,markedAt,homeworkStatus,comment,markedBy`. `staff` and `closing` may be empty/null. Absent students are calculated client-side from the teacher’s student list, so `GET /teacher/myStudents` must also return student `_id/userID` and center/grade fields. |
+
+### Teacher schedule forms
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST/PATCH /teacher/schedule[/:slotId]` | `{ title: string, dayOfWeek: number, startTime: "HH:MM", durationMinutes: number \| null, center: string \| null, grade: string \| number \| null, notes: string, isActive: boolean }`. Title/day/time are required. Day options are Sunday=0 through Saturday=6. | Schedule grid reads `_id,title,dayOfWeek,startTime,durationMinutes,centerName,grade,notes,isActive`; center and grade can be absent/null. |
+| `POST /teacher/schedule/:slotId/start` | `{ sequence: string }`, required topic for today’s session. | Created live session must return `_id`; center and grade should be inherited from the slot. UI navigates to scanning after creation. |
+
+### Teacher student-management forms
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST /teacher/myStudents` create student | Required `firstName,phone`; optional `lastName,parentPhone,grade,gender,schoolName,learningLanguage,center,pricePerSession`. Numeric fields are numbers or `null`; center and grade are select values. | The credentials dialog reads `{ userID, password?, student }`; `student` needs `firstName,lastName`. |
+| `PATCH /teacher/myStudents/:studentId` edit | `firstName,lastName,phone,parentPhone,grade,schoolName,learningLanguage,gender,center,pricePerSession,adminNote`, plus `followUpAssistant` only when assistants are available. | Reloaded profile reads student fields plus `userID,balance,points,isBlocked,warningsCount,centerName,pricePerSession`. |
+| `POST /teacher/myStudents/:studentId/balance` | UI asks `kind: "add" \| "deduct"`, positive `amount`, and `reason`; the API receives `{ amount: positive number for add or negative number for deduct, reason: string }`. | Reloaded profile/history; transaction row needs `createdAt,type,reason,amount`. |
+| `POST /teacher/myStudents/:studentId/points` | `{ points: number, reason: string }`; a negative number removes points. | Updated student points and point-history row. |
+| `POST /teacher/myStudents/:studentId/warnings` | `{ reason: string }`, required. | Updated `warnings[]`, `warningsCount`, and `isBlocked`; warning rows need `_id,reason,createdAt`. |
+| `DELETE /teacher/myStudents/:studentId/warnings/:warningId` | No body. | Updated warning list/count and block state. |
+| `PATCH /teacher/myStudents/:studentId/block` | `{ blocked: boolean }`. | Updated `isBlocked`. |
+| `DELETE /teacher/myStudents/:studentId` archive | `{ reason: string }`; reason is optional. | Success is followed by navigation/reload; archive list needs student summary and removal reason/date. |
+| `GET /teacher/myStudents/:studentId/history` | No body. | Tabs consume `attendance[]` (`session, status, markedAt, payment, homeworkStatus`), `exams[]` (`exam,score,rank,participants,stats`), `homework[]` (`homework,submission`), `transactions[]` (`createdAt,type,reason,amount`), `warnings[]`, `points[]`, `booklets[]` (`booklet,price,paid,delivered,deliveredAt,status`), `lessons[]` (`lesson,access,watchedSeconds,totalSeconds`), and `stats: { attendanceRate,present,absent,homeworkRate,examAvg }`. |
+
+### Teacher exam, homework, and lesson forms
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST/PATCH /teacher/exams[/:examId]` | `{ name: string, maxScore: number, date: string, grade: string \| number \| null, session: string \| null }`; name/max score are required in the form. | Detail/editor reads `_id,name,maxScore,date,grade,session,results[],stats,sessionLabel`; list rows need exam name/date/max score and result rows. |
+| `PUT /teacher/exams/:examId/scores` | `{ scores: [{ student: string, score: number \| null }] }`. The score is a number or null for absent; the form submits all rows, including rows hidden by the current search filter. | Updated scores and recalculated statistics; students’ exam view reads `exam:{_id,name,maxScore,date},score,rank,participants,stats:{count,avg,max,min}`. |
+| `POST/PATCH /teacher/homework[/:homeworkId]` | `{ title: string, description: string, startDate: string, endDate: string, submissionType: "upload" \| "link", externalLink: string, grade: string \| number \| null }`. Title and dates are required. | List/detail reads `_id,title,description,order,startDate,endDate,externalLink,submissionType,isOpen`; submissions view also needs each submission’s `student,status,files,link,comment,submittedAt,feedback`. |
+| `PATCH /teacher/homework/submissions/:submissionId` | `{ status: string, feedback: string }`; use the UI’s configured homework status values and do not silently accept unknown statuses. | Updated submission with `status,feedback`; student view renders those and submitted date/files. |
+| `POST/PATCH /teacher/lessons[/:lessonId]` | The editor sends `{ title,description,week,grade,isFree,price,accessHours,viewsIfAttended,viewsIfPaid,sessions, published, parts, questions }`. Detail fields are title/week/grade plus the remaining optional settings. Each part is `{ title,category,url,durationSeconds }`; a file is uploaded first and only its URL is sent. Each question is `{ text,imageUrl,part,type,trigger,triggerSeconds,choices,correct,bonusPoints,isActive }`; MCQ `choices` is `{a,b,c,d}` and `correct` is `"a"|"b"|"c"|"d"`, essay uses `{}` and `null`. New question editor-only `tempId` is stripped before sending. Parts/questions arrays are sent as the editor’s full current arrays. | Editor requires returned lesson `_id,title,description,week,grade,isFree,price,accessHours,viewsIfAttended,viewsIfPaid,sessions,published,parts[],questions[],grants[]`. Saved nested parts/questions need IDs for later question-to-part references and answer/grant routes. |
+| `POST /teacher/lessons/:lessonId/grants` | `{ student: string, maxViews: number \| null, hours: number \| null }`. | Updated grants list; grant rows need student, usage/view limits and expiry/access dates. |
+| `PATCH /teacher/lessons/answers/:answerId` | `{ isCorrect: boolean, points: number }`; incorrect answers send `points: 0`. | Updated answer; the UI reloads the lesson answer list. |
+| `GET /teacher/lessons/:lessonId/answers` | No body. | Rows read `answer._id,student,question.text,imageUrl,text,isCorrect,points,status`; `question.bonusPoints` is used as the initial grading points value. |
+
+### Teacher booklet, wallet, announcement, follow-up, assistant, and finance forms
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST/PATCH /teacher/booklets[/:bookletId]` | `{ name: string, grade: string \| number, stock: number, printPrice: number, sellPrice: number, isActive: boolean }`; fields come from catalogue form. | Catalogue rows need `_id,name,grade,stock,printPrice,sellPrice,isActive`; order rows need populated `booklet.name` and order fields. |
+| `POST /teacher/booklets/orders` assign/sell | `{ student: string, booklet: string, price: number \| null, paid: number, delivered: boolean }`. Price may be blank/null to use normal sell price. | Order needs `_id,student,booklet,price,paid,delivered,status,method,receiptUrl,reference,createdAt`. Student/booklet are populated display objects. |
+| `PATCH /teacher/booklets/orders/:orderId` | Review sends `{ status: "verified" \| "rejected" }`; payment edit sends `{ price: number, paid: number }`; delivery sends `{ delivered: true }`. | Updated order; student booklets read `price,paid,delivered,deliveredAt,status,method`. |
+| `POST /teacher/recharge-codes` | `{ count: number, amount: number, prefix: string, batch: string }`. | Generated code rows/list entries need code, amount, status, batch and timestamps as displayed. |
+| `PATCH /teacher/topups/:id` review | `{ status: string, amount: number, reason: string }`. UI should only allow the declared approve/reject statuses. | Updated top-up state; approving may affect enrollment balance and must produce a transaction exactly once. |
+| `GET /teacher/transactions?from&to&type` and `GET /teacher/expenses?from&to` | Query values are optional date strings and type filter string; expense creation sends `{ amount: number, category: "printing" \| "rent" \| "salaries" \| "supplies" \| "marketing" \| "other", reason: string, date: string }`. | Transaction table reads `createdAt,type,reason,amount`; expenses read `_id,amount,category,reason,date`. Finance summary fields must be numeric and match the date-filtered rows. |
+| `POST/PATCH /teacher/announcements[/:id]` | `{ title,body,imageUrl,videoUrl,linkUrl,audience:{grades:string[],centers:string[]},pinned:boolean,isActive:boolean }`. Image file is uploaded first; `imageUrl` is the returned upload URL. Empty audience arrays mean no selected grade/center restriction only if that is the agreed product rule. | Announcement card reads `_id,title,body,imageUrl,videoUrl,linkUrl,audience,pinned,isActive,createdAt`. |
+| `GET /teacher/follow-up?session&mine` | `session` and `mine` are query filters; no request body. | Results include `rows[]` with `student` (userID/name/phone/parentPhone), `attended,homeworkStatus,examScore,absences,assignedTo,lastComment`; also `assistants[]` with `_id,name`. |
+| `POST /teacher/follow-up/comments` | `{ student: string, session: string, comment: string }`; comment is required. | Saved note’s `comment,byName,createdAt`; the view inserts those values into `lastComment`. |
+| `POST /teacher/follow-up/assign` | `{ assistant: string \| null, students: string[] }`; selected students are all checked rows. Null assistant means unassign. | Success followed by a full list reload. |
+| `POST /teacher/assistants` then `PATCH /teacher/assistants/:id` | Create form: `{ firstName,lastName,userName,email,phone,password,fullAccess,permissions }`; UI removes `fullAccess` from the POST, then calls update with `{ role: "Admin" \| "Assistant", permissions }`. Edit sends `{ firstName,lastName,phone,role,permissions,salary:{type,amount} }`. | Assistant list needs `_id,name/firstName,lastName,email,phone,role,permissions,salary,isActive`; stats view reads `sessionsWorked,minutes,attendanceMarked,homeworkChecked,comments,salaryEstimate,rows[]`. |
+
+### Student and parent forms, requests, and response fields
+
+| Endpoint/action | Exact UI input and serialized request | Response properties read by the UI |
+|---|---|---|
+| `POST /student/teachers/:teacherId/request` and `DELETE .../request` | No body; teacher ID is in the path. | The refreshed `/student/teachers` result is an array of `{ teacher:{_id,firstName,lastName,userName,companyName,subject[],teachingLanguage,bio,profilepic,centers[]},status,balance }`; statuses include `active` and `pending`. |
+| `GET /teachers/search?q&subject` and `GET /teacher/:id` | Search sends text `q` and selected subject; profile call sends teacher ID in path. | Directory rows need public teacher card fields `_id,firstName,lastName,userName,companyName,subject[],teachingLanguage,bio,profilepic,centers[]`. Profile also reads `studentsCount,schedule[]`; never send private fields. |
+| `PATCH /student/profile` | Profile form sends `{ firstName,lastName,parentPhone,schoolName }`. Photo change uploads first, then sends `{ profilepic: url }`. | Returned profile reads `_id,userID,firstName,lastName,phone,parentPhone,grade,schoolName,learningLanguage,profilepic`. |
+| `POST /student/teachers/:teacherId/topups` | `{ amount: number, method: string, reference: string, receiptUrl: string }`. Receipt is a required image upload in the UI; reference can be blank. | UI only needs successful submission; subsequent teacher review uses pending state. Do not credit balance before approval. |
+| `POST /student/recharge` | `{ code: string }`; view trims whitespace and uppercases the code. | `{ amount: number, balance: number, teacher: publicTeacher }`; success message reads amount, teacher name, and new balance. |
+| `POST /student/homework/:homeworkId/submit` | For upload homework, UI requires 1–10 files, each at most 10 MB, uploads each and sends `{ files: string[], comment: string, link: "" }`. Link homework sends `{ files: [], comment: string, link: string }`; result link and note are optional. | Reloaded homework rows read `_id,order,title,description,startDate,endDate,externalLink,isOpen,submissionType,submission`. Submission reads `status,files,submittedAt,feedback`. |
+| `POST /student/lessons/:lessonId/unlock` | No body; confirmation is UI-only. | Result’s `access` updates access state; lesson list/detail consume `state,price,views,viewsLeft,hours,expiresAt,startsOnOpen`. |
+| `POST /student/lessons/:lessonId/progress` | Start: `{ start: true }`; progress: `{ part: string, seconds: number }`. Progress is saved every 30 seconds and at part end. | Start may return `access`; detail/list render `watchedSeconds`, access, and parts. |
+| `POST /student/questions/:questionId/answer` | MCQ: `{ choice: "a" \| "b" \| "c" \| "d" }`. Essay: upload a photo then `{ imageUrl: url }`. | Answer needs `_id,choice,imageUrl,status,isCorrect,points`; safe `correct` is used to highlight the correct MCQ choice after answering. |
+| `GET /student/teachers/:teacherId/lessons` and `GET /student/lessons/:lessonId` | Teacher ID / lesson ID in path; no body. | Summary needs `_id,title,description,week,partsCount,questionsCount,durationSeconds,watchedSeconds,access`. Detail additionally needs `teacher,parts[{_id,title,category,url,durationSeconds}],questions[{_id,part,text,imageUrl,type,trigger,triggerSeconds,choices,correct,bonusPoints,answer}],access,accessHours`. Only return playable `url` values after verifying open access. |
+| `POST /student/booklets/:bookletId/reserve` | `{ method: "center" \| "transfer", receiptUrl: string, reference: string }`; transfer requires receipt image and uploads it first; center payment does not require a receipt. | Refreshed catalogue array `{ booklet:{_id,name,sellPrice,stock}, order:null|{price,paid,status,delivered,method,reference} }`. |
+| `GET /student/teachers/:teacherId/exams` | No body. | Rows read `exam:{_id,name,maxScore,date},score,rank,participants,stats:{avg,max}`; table/chart also require `stats.count,min` where provided. |
+| `GET /student/teachers/:teacherId/transactions` and `GET /student/teachers/:teacherId/overview` | No body. | Transactions: `{_id,createdAt,type,reason,amount}`. Overview reads `teacher,balance,pricePerSession,points,rank,classSize,isBlocked,centerName,warnings[],nextSlot,lastSession,stats,announcements[],followUp`; `stats` includes attendance/homework/exam rates and counts. Unsupported metrics must remain `null`, not fabricated. |
+| `POST /parent/children` link child | `{ code: string }` from the student-code form. | Linked student summary needs `_id,userID,firstName,lastName,grade,teachers[]`; teacher cards need `_id,firstName,lastName,subject[]`. |
+| `GET /parent/profile` | No body. | Parent children view consumes `person.phone` for the verified parent phone and `children[]` with `_id,userID,firstName,lastName,grade,teachers[]`. |
+| `GET /parent/children/:studentId/report?teacher=:teacherId` | Child ID path and optional selected teacher query; no body. | Report page reads `student,teachers[],teacher,isBlocked,warnings[],balance,points,centerName,sessions[],exams[],transactions[],stats,followUp`. Session rows need `session:{week,number,sequence,date},status,homeworkStatus,comment`; stats need `attendanceRate,present,absent,homeworkRate,examAvg`; followUp needs `assistant,teacherPhone,lastComment`. |
+| `DELETE /parent/children/:studentId` | No body. | Success followed by profile reload; do not return or expose unrelated children. |
+
+### Concrete JSON examples (student-contract style)
+
+The examples below show the JSON body sent by the frontend and the `data` object returned inside the standard response envelope. Replace example IDs, URLs, and values with real values. An endpoint that only needs a success result can return a small object such as `{ "updated": true }`; return the richer shape shown where the frontend reads it immediately.
+
+#### Sessions, attendance, and schedule
+
+`POST /session/sessions` — the create form sends the fields below. The `activate` checkbox is not included; checked means a second request to `PATCH /session/sessions/:id/active` with `{ "active": true }`.
+
+```json
+{
+  "sequence": "Derivatives: chain rule",
+  "week": 3,
+  "number": 2,
+  "date": "2026-10-14",
+  "center": "center-id",
+  "grade": "2",
+  "price": null
+}
+```
+
+The create response must include `_id` for the optional activation request:
+
+```json
+{
+  "_id": "session-id",
+  "sequence": "Derivatives: chain rule",
+  "week": 3,
+  "number": 2,
+  "date": "2026-10-14T00:00:00.000Z",
+  "center": "center-id",
+  "centerName": "Main Center",
+  "grade": "2",
+  "price": null,
+  "status": "normal",
+  "active": true,
+  "attendance": [],
+  "presentCount": 0,
+  "collected": 0
+}
+```
+
+`PATCH /session/sessions/:id/attendance/:studentId` is used for both payment/comment edits and homework status:
+
+```json
+{ "payment": 50, "comment": "Paid part of the fee" }
+```
+
+```json
+{ "homeworkStatus": "complete" }
+```
+
+`POST /session/sessions/:id/attendance` marks attendance with `{ "identifier": "STU-000123" }`; when the teacher confirms a blocked/insufficient-balance override, the retry body is `{ "identifier": "STU-000123", "force": true }`. Errors requiring confirmation must identify the cause in `details.code` as `"BLOCKED"` or `"INSUFFICIENT_BALANCE"`.
+
+`POST /session/sessions/:id/homework` sends `{ "identifier": "STU-000123", "status": "complete" }`. `GET /session/scan/lookup?identifier=STU-000123` returns a scan lookup object:
+
+```json
+{
+  "student": {
+    "_id": "student-id",
+    "userID": "STU-000123",
+    "firstName": "Amina",
+    "lastName": "Example",
+    "phone": "01000000000",
+    "parentPhone": "01000000001",
+    "balance": 250,
+    "isBlocked": false
+  },
+  "allowed": true
+}
+```
+
+`PUT /session/sessions/:id/closing` receives:
+
+```json
+{
+  "normalCost": 50,
+  "reducedCost": 25,
+  "reducedCount": 2,
+  "notes": "Two students paid the reduced rate"
+}
+```
+
+The saved `closing` returned in a session report should include `{ "normalCount": 8, "normalCost": 50, "reducedCount": 2, "reducedCost": 25, "total": 450, "notes": "..." }`.
+
+`POST /session/sessions/:id/staff` receives `{ "assistant": "assistant-id", "checkIn": "2026-10-14T16:00", "notes": "Room 2" }`. Check-out uses `PATCH /session/sessions/:id/staff/:entryId` with `{ "checkOut": "2026-10-14T17:30:00.000Z" }`. Session report staff rows need `assistant` (display name), `checkIn`, `checkOut`, `minutes`, and `notes`.
+
+`POST /teacher/schedule` and `PATCH /teacher/schedule/:slotId` use the same shape:
+
+```json
+{
+  "title": "Grade 2 · Group A",
+  "dayOfWeek": 3,
+  "startTime": "16:00",
+  "durationMinutes": 90,
+  "center": "center-id",
+  "grade": "2",
+  "notes": "Room 2",
+  "isActive": true
+}
+```
+
+`POST /teacher/schedule/:slotId/start` sends `{ "sequence": "Lesson 5: Derivatives" }`. It returns a created live session including `_id`, `week`, `number`, `sequence`, `date`, inherited `center` and `grade`, and `active: true`.
+
+#### Teacher student management
+
+`POST /teacher/myStudents` receives the form fields as JSON (omitted optional values are not shown):
+
+```json
+{
+  "firstName": "Amina",
+  "lastName": "Example",
+  "phone": "01000000000",
+  "parentPhone": "01000000001",
+  "grade": "2",
+  "gender": "female",
+  "schoolName": "Example School",
+  "learningLanguage": "0",
+  "center": "center-id",
+  "pricePerSession": 80
+}
+```
+
+The create flow displays the generated student credentials:
+
+```json
+{
+  "userID": "STU-000123",
+  "password": "one-time-password",
+  "student": {
+    "_id": "student-id",
+    "firstName": "Amina",
+    "lastName": "Example"
+  }
+}
+```
+
+`PATCH /teacher/myStudents/:studentId` updates student/enrollment values, such as:
+
+```json
+{
+  "firstName": "Amina",
+  "lastName": "Example",
+  "grade": "2",
+  "center": "center-id",
+  "pricePerSession": 80,
+  "followUpAssistant": "assistant-id",
+  "adminNote": "Call parent after the next session"
+}
+```
+
+Balance and points adjustment bodies are:
+
+```json
+{ "amount": -40, "reason": "Correction" }
+```
+
+```json
+{ "points": 5, "reason": "Excellent quiz result" }
+```
+
+Warning creation sends `{ "reason": "Missed class without notice" }`; blocking sends `{ "blocked": true }`; archiving sends `{ "reason": "Moved to another class" }`. The merged student response used by profiles and lists includes student identity/contact fields and enrollment values, for example:
+
+```json
+{
+  "_id": "student-id",
+  "userID": "STU-000123",
+  "firstName": "Amina",
+  "lastName": "Example",
+  "phone": "01000000000",
+  "parentPhone": "01000000001",
+  "grade": "2",
+  "center": "center-id",
+  "centerName": "Main Center",
+  "balance": 250,
+  "pricePerSession": 80,
+  "points": 12,
+  "isBlocked": false,
+  "warningsCount": 0
+}
+```
+
+#### Exams and homework
+
+`POST /teacher/exams` and `PATCH /teacher/exams/:examId` use:
+
+```json
+{
+  "name": "Unit 1",
+  "maxScore": 100,
+  "date": "2026-10-14",
+  "grade": "2",
+  "session": "session-id"
+}
+```
+
+`PUT /teacher/exams/:examId/scores` submits every student row, including any rows currently hidden by the search filter:
+
+```json
+{
+  "scores": [
+    { "student": "student-id-1", "score": 85 },
+    { "student": "student-id-2", "score": null }
+  ]
+}
+```
+
+The teacher exam result needs exam details, result rows, and statistics; the student-facing projection is:
+
+```json
+[
+  {
+    "exam": { "_id": "exam-id", "name": "Unit 1", "maxScore": 100, "date": "2026-10-14T00:00:00.000Z" },
+    "score": 85,
+    "rank": 2,
+    "participants": 18,
+    "stats": { "count": 18, "avg": 72.5, "max": 98, "min": 30 }
+  }
+]
+```
+
+`POST /teacher/homework` and `PATCH /teacher/homework/:homeworkId` use:
+
+```json
+{
+  "title": "Worksheet 3",
+  "description": "Solve questions 1–5",
+  "startDate": "2026-10-14",
+  "endDate": "2026-10-21",
+  "submissionType": "upload",
+  "externalLink": "",
+  "grade": "2"
+}
+```
+
+Student upload submission sends `{ "files": ["https://files.example.test/work.pdf"], "comment": "Question 4 is unclear", "link": "" }`. For link homework it can send `{ "files": [], "comment": "", "link": "https://example.test/my-work" }`. Grading sends `{ "status": "complete", "feedback": "Good work" }`. Homework list rows need `_id,title,description,order,startDate,endDate,externalLink,submissionType,isOpen`; a submission includes `status,files,link,comment,submittedAt,feedback`.
+
+#### Video lessons and question answers
+
+`POST /teacher/lessons` and `PATCH /teacher/lessons/:lessonId` submit lesson fields with nested ordered arrays. Example:
+
+```json
+{
+  "title": "Derivatives",
+  "description": "Introduction and worked examples",
+  "week": 3,
+  "grade": "2",
+  "isFree": false,
+  "price": 30,
+  "accessHours": 48,
+  "viewsIfAttended": 5,
+  "viewsIfPaid": 3,
+  "sessions": ["session-id"],
+  "published": true,
+  "parts": [
+    {
+      "title": "Explanation",
+      "category": "explanation",
+      "url": "https://media.example.test/video.mp4",
+      "durationSeconds": 600
+    }
+  ],
+  "questions": [
+    {
+      "text": "What is the derivative of x²?",
+      "imageUrl": "",
+      "part": "part-id",
+      "type": "mcq",
+      "trigger": "time",
+      "triggerSeconds": 120,
+      "choices": { "a": "x", "b": "2x", "c": "x²", "d": "2" },
+      "correct": "b",
+      "bonusPoints": 5,
+      "isActive": true
+    }
+  ]
+}
+```
+
+Video files and question images are uploaded separately; only their returned URLs appear in this body. `POST /teacher/lessons/:lessonId/grants` sends `{ "student": "student-id", "maxViews": 3, "hours": 48 }`. Teacher essay grading sends `{ "isCorrect": true, "points": 5 }`; an incorrect grade uses `{ "isCorrect": false, "points": 0 }`.
+
+The student lesson summary/detail response must keep access information with the lesson. A detail example after access is granted:
+
+```json
+{
+  "_id": "lesson-id",
+  "title": "Derivatives",
+  "description": "Introduction and worked examples",
+  "week": 3,
+  "teacher": { "_id": "teacher-id", "firstName": "Teacher", "lastName": "Example" },
+  "access": {
+    "state": "granted",
+    "viewsLeft": 2,
+    "views": 3,
+    "hours": 48,
+    "expiresAt": "2026-10-16T16:00:00.000Z",
+    "startsOnOpen": false
+  },
+  "accessHours": 48,
+  "parts": [
+    { "_id": "part-id", "title": "Explanation", "category": "explanation", "url": "https://media.example.test/video.mp4", "durationSeconds": 600 }
+  ],
+  "questions": [
+    {
+      "_id": "question-id",
+      "part": "part-id",
+      "type": "mcq",
+      "text": "What is the derivative of x²?",
+      "imageUrl": "",
+      "bonusPoints": 5,
+      "trigger": "time",
+      "triggerSeconds": 120,
+      "choices": { "a": "x", "b": "2x", "c": "x²", "d": "2" },
+      "answer": null
+    }
+  ],
+  "progress": []
+}
+```
+
+`POST /student/lessons/:lessonId/unlock` takes no body and returns `{ "access": { "state": "granted", "viewsLeft": 3, "hours": 48, "expiresAt": null, "startsOnOpen": true }, "balance": 220 }`. Start watching sends `{ "start": true }`; progress sends `{ "part": "part-id", "seconds": 30 }`. An MCQ answer sends `{ "choice": "b" }`; an essay answer uploads the photo then sends `{ "imageUrl": "https://files.example.test/answer.jpg" }`. Answers should return `_id,question,choice,imageUrl,status,isCorrect,points` and reveal `correct` only once it is appropriate.
+
+#### Booklets, wallet, expenses, and finance
+
+`POST /teacher/booklets` and `PATCH /teacher/booklets/:bookletId` send:
+
+```json
+{
+  "name": "Algebra booklet",
+  "grade": "2",
+  "stock": 30,
+  "printPrice": 20,
+  "sellPrice": 35,
+  "isActive": true
+}
+```
+
+`POST /teacher/booklets/orders` sells/assigns a booklet with `{ "student": "student-id", "booklet": "booklet-id", "price": null, "paid": 10, "delivered": false }`. A student transfer reservation sends `{ "method": "transfer", "receiptUrl": "https://files.example.test/receipt.jpg", "reference": "TX-123" }`; pay-at-center sends `{ "method": "center", "receiptUrl": "", "reference": "" }`. Order rows need populated `student` and `booklet` objects plus `_id,price,paid,delivered,deliveredAt,method,status,receiptUrl,reference,createdAt`. Review sends `{ "status": "verified" }` or `{ "status": "rejected" }`; editing payment sends `{ "price": 35, "paid": 20 }`; marking delivery sends `{ "delivered": true }`.
+
+`POST /teacher/recharge-codes` receives `{ "count": 20, "amount": 100, "prefix": "LC", "batch": "October 2026" }`. Code listing/generation results need code, amount, status, batch, and timestamps as displayed. A student redeems with `{ "code": "LC-XXXXXX" }` and expects `{ "amount": 100, "balance": 350, "teacher": { "_id": "teacher-id", "firstName": "Teacher", "lastName": "Example" } }`.
+
+`POST /student/teachers/:teacherId/topups` sends `{ "amount": 200, "method": "Vodafone Cash", "reference": "TX-123", "receiptUrl": "https://files.example.test/receipt.jpg" }`. Review at `PATCH /teacher/topups/:topupId` sends `{ "status": "approved", "amount": 200, "reason": "Receipt verified" }`; the pending top-up itself must not change the balance.
+
+`POST /teacher/expenses` sends `{ "amount": 500, "category": "printing", "reason": "October worksheets", "date": "2026-10-14" }`. Expense list rows need `_id,amount,category,reason,date`. Finance and transaction report calls use query parameters, for example `GET /teacher/transactions?from=2026-10-01&to=2026-10-31&type=topup`; each transaction row needs `{ "_id": "transaction-id", "createdAt": "2026-10-14T10:00:00.000Z", "type": "topup", "reason": "Wallet recharge", "amount": 200 }`.
+
+#### Announcements, follow-up, and assistants
+
+`POST /teacher/announcements` sends:
+
+```json
+{
+  "title": "Exam next week",
+  "body": "Please revise chapters 1–3.",
+  "imageUrl": "https://files.example.test/announcement.jpg",
+  "videoUrl": "",
+  "linkUrl": "",
+  "audience": { "grades": ["2"], "centers": ["center-id"] },
+  "pinned": true,
+  "isActive": true
+}
+```
+
+`POST /teacher/follow-up/comments` sends `{ "student": "student-id", "session": "session-id", "comment": "Called the parent; student was sick" }`; return `{ "comment": "Called the parent; student was sick", "byName": "Assistant Example", "createdAt": "2026-10-14T10:00:00.000Z" }`. Assignment uses `PUT /teacher/follow-up/assign` with `{ "assistant": "assistant-id", "students": ["student-id-1", "student-id-2"] }`; use `"assistant": null` to unassign. Follow-up list results need student contact fields, attendance/homework/exam/absence summary, `assignedTo`, `lastComment`, and an `assistants` array with `_id,name`.
+
+Assistant creation submits:
+
+```json
+{
+  "firstName": "Sam",
+  "lastName": "Example",
+  "userName": "sam.example",
+  "email": "sam@example.test",
+  "phone": "01000000002",
+  "password": "temporary-password",
+  "permissions": ["scan_attendance", "scan_homework"]
+}
+```
+
+The UI then separately patches role/permissions, for example `{ "role": "Assistant", "permissions": ["scan_attendance", "scan_homework"] }`. Assistant edit sends `{ "firstName": "Sam", "lastName": "Example", "phone": "01000000002", "role": "Assistant", "permissions": ["scan_attendance"], "salary": { "type": "hourly", "amount": 50 } }`. Assistant list rows need `_id,name/firstName,lastName,email,phone,role,permissions,salary,isActive`; stats require `sessionsWorked,minutes,attendanceMarked,homeworkChecked,comments,salaryEstimate,rows`.
+
+#### Parent and public teacher data
+
+`POST /parent/children` sends `{ "code": "STU-000123" }`. The linked-child response should include `_id,userID,firstName,lastName,grade,teachers[]`. `GET /parent/profile` returns a `person` object containing the verified parent phone plus a `children[]` array. For example:
+
+```json
+{
+  "person": { "phone": "01000000001" },
+  "children": [
+    {
+      "_id": "student-id",
+      "userID": "STU-000123",
+      "firstName": "Amina",
+      "lastName": "Example",
+      "grade": "2",
+      "teachers": [
+        { "_id": "teacher-id", "firstName": "Teacher", "lastName": "Example", "subject": ["Math"] }
+      ]
+    }
+  ]
+}
+```
+
+`GET /parent/children/:studentId/report?teacher=teacher-id` should return the response below; include only data belonging to the authenticated parent’s linked child and selected teacher:
+
+```json
+{
+  "student": { "_id": "student-id", "userID": "STU-000123", "firstName": "Amina", "lastName": "Example", "grade": "2" },
+  "teachers": [{ "_id": "teacher-id", "firstName": "Teacher", "lastName": "Example", "subject": ["Math"] }],
+  "teacher": { "_id": "teacher-id", "firstName": "Teacher", "lastName": "Example" },
+  "isBlocked": false,
+  "warnings": [],
+  "balance": 250,
+  "points": 12,
+  "centerName": "Main Center",
+  "stats": { "attendanceRate": 80, "present": 8, "absent": 2, "homeworkRate": 75, "examAvg": 85 },
+  "sessions": [
+    {
+      "session": { "week": 3, "number": 2, "sequence": "Derivatives", "date": "2026-10-14T10:00:00.000Z" },
+      "status": "present",
+      "homeworkStatus": "complete",
+      "comment": ""
+    }
+  ],
+  "exams": [],
+  "transactions": [],
+  "followUp": {
+    "assistant": { "name": "Assistant Example", "phone": "01000000002" },
+    "teacherPhone": "01000000003",
+    "lastComment": null
+  }
+}
+```
+
+Public teacher directory cards need `_id,firstName,lastName,userName,companyName,subject[],teachingLanguage,bio,profilepic,studentsCount,centers[]`. `GET /teacher/:id` additionally supplies `centers[]` as public center summaries and `schedule[]` for the weekly schedule. Never include credential hashes, private phone numbers, or student-level records in public teacher results.
+
 ## Models: what exists and what still needs a persistence decision
 
 ### Existing source models
