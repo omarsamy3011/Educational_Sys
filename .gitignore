@@ -2,6 +2,7 @@
 /src/config
 *.env 
 /student-tracking-system 
-docker-compose-dev.yml
-docker-compose-prod.yml
+*.yml
 BACKEND_IMPLEMENTATION_GAPS.md
+*.crt
+*.key

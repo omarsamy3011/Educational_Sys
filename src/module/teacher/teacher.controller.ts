@@ -306,4 +306,10 @@ router.get('/:id', auth, async (req: userRequest, res: Response) => {
     successResponce({ res, message: "Teacher data retrieved successfully", data });
 })
 
+router.get("/search", async (req:userRequest, res:Response) => {
+    const query = typeof req.query.q === "string" ? req.query.q : undefined
+    const data = await teacherService.searchTeachers(query)
+    successResponce({ res, message: "Teachers searched successfully", data })
+})
+
 export default router;

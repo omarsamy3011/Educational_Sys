@@ -126,4 +126,10 @@ router.patch("/requests/:requestId/:action", auth, async (req: userRequest, res:
     successResponce({ res, message: `Request ${action}ed successfully`, data })
 })
 
+router.get("/search", async (req:userRequest, res:Response) => {
+    const query = typeof req.query.q === "string" ? req.query.q : undefined
+    const data = await centerService.searchCenters(query)
+    successResponce({ res, message: "Centers searched successfully", data })
+})
+
 export default router;

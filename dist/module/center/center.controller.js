@@ -101,4 +101,9 @@ router.patch("/requests/:requestId/:action", auth_middleware_1.auth, async (req,
     const data = await center_service_1.centerService.decideRequest(getCenterId(req), requestId, action);
     (0, successresponce_1.successResponce)({ res, message: `Request ${action}ed successfully`, data });
 });
+router.get("/search", async (req, res) => {
+    const query = typeof req.query.q === "string" ? req.query.q : undefined;
+    const data = await center_service_1.centerService.searchCenters(query);
+    (0, successresponce_1.successResponce)({ res, message: "Centers searched successfully", data });
+});
 exports.default = router;

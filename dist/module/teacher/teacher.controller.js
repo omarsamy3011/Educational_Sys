@@ -256,4 +256,9 @@ router.get('/:id', auth_middleware_1.auth, async (req, res) => {
     const data = await teacher_service_1.default.getTeacherData(req.params.id);
     (0, successresponce_1.successResponce)({ res, message: "Teacher data retrieved successfully", data });
 });
+router.get("/search", async (req, res) => {
+    const query = typeof req.query.q === "string" ? req.query.q : undefined;
+    const data = await teacher_service_1.default.searchTeachers(query);
+    (0, successresponce_1.successResponce)({ res, message: "Teachers searched successfully", data });
+});
 exports.default = router;

@@ -13,13 +13,13 @@ const teacher_controller_1 = __importDefault(require("./module/teacher/teacher.c
 const session_controller_1 = __importDefault(require("./module/session/session.controller"));
 const center_controller_1 = __importDefault(require("./module/center/center.controller"));
 const student_controller_1 = __importDefault(require("./module/student/student.controller"));
-const center_service_1 = require("./module/center/center.service");
-const teacher_service_1 = __importDefault(require("./module/teacher/teacher.service"));
 const node_path_1 = __importDefault(require("node:path"));
 const errorHandling_1 = require("./middleware/errorHandling");
 const cors_1 = __importDefault(require("cors"));
 const redisService_1 = require("./common/service/redisService");
 const os_1 = __importDefault(require("os"));
+const node_fs_1 = require("node:fs");
+const https_1 = __importDefault(require("https"));
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
@@ -32,16 +32,6 @@ const bootstrap = async () => {
     app.get('/check-health', async (req, res) => {
         (0, successresponce_1.successResponce)({ res, message: 'healthy' });
     });
-    app.get("/centers/search", async (req, res) => {
-        const query = typeof req.query.q === "string" ? req.query.q : undefined;
-        const data = await center_service_1.centerService.searchCenters(query);
-        (0, successresponce_1.successResponce)({ res, message: "Centers searched successfully", data });
-    });
-    app.get("/teachers/search", async (req, res) => {
-        const query = typeof req.query.q === "string" ? req.query.q : undefined;
-        const data = await teacher_service_1.default.searchTeachers(query);
-        (0, successresponce_1.successResponce)({ res, message: "Teachers searched successfully", data });
-    });
     app.use(aurh_controller_1.default);
     app.use('/teacher', teacher_controller_1.default);
     app.use('/session', session_controller_1.default);
@@ -52,9 +42,13 @@ const bootstrap = async () => {
     app.use(errorHandling_1.globalErrorHandling);
     app.use(express_1.default.static(node_path_1.default.resolve(__dirname, "../front-end")));
     (0, connection_1.dbconnection)();
-    app.listen(env_service_1.env.port, () => {
+    const options = {
+        key: (0, node_fs_1.readFileSync)('cert.key'),
+        cert: (0, node_fs_1.readFileSync)('cert.crt')
+    };
+    https_1.default.createServer(options, app).listen(Number(env_service_1.env.port), "0.0.0.0", () => {
         console.log(`server is running on port ${env_service_1.env.port}`);
-        console.log(`connect on the http://${Object.values(os_1.default.networkInterfaces())[0][1].address}:${env_service_1.env.port}`);
+        console.log(`connect on the https://${Object.values(os_1.default.networkInterfaces())[0][1].address}:${env_service_1.env.port}`);
     });
 };
 exports.bootstrap = bootstrap;

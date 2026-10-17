@@ -126,9 +126,9 @@ export const api = {
     return send("POST", "/uploads", { form });
   },
   directory: {
-    teachers: (query) => get("/teachers/search", query), // public teacher directory: q, subject, grade
+    teachers: (query) => get("/teacher/search", query), // public teacher directory: q, subject, grade
     teacher: (teacherId) => get(`/teacher/${id(teacherId)}`),
-    centers: (query) => get("/centers/search", query),
+    centers: (query) => get("/center/search", query),
   },
   changePassword: (role, body) => patch(`/${role}/password`, body),
 
