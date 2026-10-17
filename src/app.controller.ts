@@ -47,7 +47,7 @@ export const bootstrap = async() =>{
     }
     https.createServer(options,app).listen(Number(env.port),"0.0.0.0",()=>{
         console.log(`server is running on port ${env.port}`)
-        console.log(`connect on the https://${Object.values(os.networkInterfaces() as object)[0][1].address}:${env.port}`)
+        console.log(`connect on the https://${os.networkInterfaces()['Wi-Fi']?.pop()?.address}:${env.port}`)
     })
 
     // app.listen(env.port , ()=>{
