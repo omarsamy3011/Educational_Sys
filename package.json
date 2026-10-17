@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "cross-env NODE_ENV=dev concurrently \"npx tsc -watch\" \"node --watch ./dist/main.js\"",
-    "start:prod": "cross-env NODE_ENV=prod concurrently \"npx tsc -watch\" \"node --watch ./dist/main.js\"",
+    "start:dev": "cross-env NODE_ENV=dev concurrently \"tsc -watch\" \"node --watch ./dist/main.js\"",
+    "start:prod": "cross-env NODE_ENV=prod concurrently \"tsc -watch\" \"node --watch ./dist/main.js\"",
     "seed:demo": "cross-env NODE_ENV=dev SEED_DEMO_DATA=true tsx src/scripts/seed-demo.ts"
   },
   "keywords": [],
